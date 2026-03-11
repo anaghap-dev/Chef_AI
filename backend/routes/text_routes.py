@@ -1,16 +1,19 @@
 from flask import Blueprint, request, jsonify
-from modules.text_processing import preprocess_ingredients
-from modules.recipe_matcher import find_recipes
+from modules.recipe_matcher import recommend_recipes
 
-text_bp = Blueprint("text", __name__)
+text_routes = Blueprint("text_routes", __name__)
 
-@text_bp.route("/text-input", methods=["POST"])
-def text_input():
 
-    data = request.json
+@text_routes.route("/search/text", methods=["POST"])
+def search_by_text():
 
-    ingredients = preprocess_ingredients(data["ingredients"])
+    data = request.get_json()
 
-    recipes = find_recipes(ingredients)
+    ingredients = data.get("ingredients", "")
 
-    return jsonify(recipes)
+    recipes = recommend_recipes(ingredients)
+
+    return jsonify({
+        "input_ingredients": ingredients,
+        "recipes": recipes
+    })

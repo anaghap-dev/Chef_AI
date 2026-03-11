@@ -5,12 +5,15 @@ from nltk.tokenize import word_tokenize
 nltk.download('punkt')
 nltk.download('stopwords')
 
+
 def preprocess_ingredients(text):
 
-    tokens = word_tokenize(text.lower())
+    text = str(text).lower()
+ #separates each word and commas as tokens and make text as lower
+    tokens = word_tokenize(text)
 
-    stop_words = set(stopwords.words('english'))
-
+    stop_words = set(stopwords.words('english'))   # remove words like this is are etc
+  # remove numbers punctuations etc
     cleaned = [word for word in tokens if word.isalpha() and word not in stop_words]
 
-    return cleaned
+    return " ".join(cleaned) # returns as text string

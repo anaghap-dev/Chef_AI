@@ -1,22 +1,35 @@
-import json
+import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-def find_recipes(user_ingredients):
+from modules.text_processing import preprocess_ingredients
 
-    with open("data/recipes.json") as f:
-        recipes = json.load(f)
+# Load dataset once
+df = pd.read_csv("data/recipes.csv")
 
-    recipe_texts = [" ".join(r["ingredients"]) for r in recipes]
+# Clean ingredients column
+df["ingredients"] = df["ingredients"].fillna("").apply(preprocess_ingredients)
 
-    vectorizer = TfidfVectorizer()
+# Train TF-IDF model once
+vectorizer = TfidfVectorizer( ngram_range=(1,2),stop_words="english",  min_df=2)
+ingredient_vectors = vectorizer.fit_transform(df["ingredients"])
 
-    tfidf_matrix = vectorizer.fit_transform(recipe_texts + [" ".join(user_ingredients)])
+print("Recipe model loaded")
+print("Total recipes:", ingredient_vectors.shape[0])
 
-    similarity = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])
+
+def recommend_recipes(user_input):
+
+    user_input = preprocess_ingredients(user_input)
+
+    user_vector = vectorizer.transform([user_input])
+
+    similarity = cosine_similarity(user_vector, ingredient_vectors)
 
     scores = similarity.flatten()
 
-    ranked = sorted(zip(recipes, scores), key=lambda x: x[1], reverse=True)
+    top_indices = scores.argsort()[-5:][::-1]
 
-    return [r[0] for r in ranked[:5]]
+    results = df.iloc[top_indices]
+
+    return results.to_dict(orient="records")
