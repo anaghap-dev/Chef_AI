@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from models.text_processing import preprocess_ingredients
+from modules.text_processing import preprocess_ingredients
 
 # Load dataset once
 df = pd.read_csv("data/recipes.csv")
@@ -11,7 +11,7 @@ df = pd.read_csv("data/recipes.csv")
 df["ingredients"] = df["ingredients"].fillna("").apply(preprocess_ingredients)
 
 # Train TF-IDF model once
-vectorizer = TfidfVectorizer()
+vectorizer = TfidfVectorizer( ngram_range=(1,2),stop_words="english",  min_df=2)
 ingredient_vectors = vectorizer.fit_transform(df["ingredients"])
 
 print("Recipe model loaded")
