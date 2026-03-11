@@ -1,16 +1,20 @@
-from flask import Blueprint, request, jsonify
-from modules.text_processing import preprocess_ingredients
-from modules.recipe_matcher import find_recipes
+from fastapi import APIRouter
+from pydantic import BaseModel
 
-text_bp = Blueprint("text", __name__)
+from models.recipe_matcher import recommend_recipes
 
-@text_bp.route("/text-input", methods=["POST"])
-def text_input():
+router = APIRouter()
 
-    data = request.json
+class IngredientInput(BaseModel):
+    ingredients: str
 
-    ingredients = preprocess_ingredients(data["ingredients"])
 
-    recipes = find_recipes(ingredients)
+@router.post("/search/text")
+def search_by_text(data: IngredientInput):
 
-    return jsonify(recipes)
+    recipes = recommend_recipes(data.ingredients)
+
+    return {
+        "input_ingredients": data.ingredients,
+        "recipes": recipes
+    }

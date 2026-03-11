@@ -1,13 +1,11 @@
-from flask import Flask
-from routes.text_routes import text_bp
-from routes.image_routes import image_bp
-from routes.voice_routes import voice_bp
+from fastapi import FastAPI
+from routes.text_routes import router as text_router
 
-app = Flask(__name__)
+app = FastAPI(title="ChefAI Recipe API")
 
-app.register_blueprint(text_bp)
-app.register_blueprint(image_bp)
-app.register_blueprint(voice_bp)
+# Register routes
+app.include_router(text_router)
 
-if __name__ == "__main__":
-    app.run(debug=True)
+@app.get("/")
+def home():
+    return {"message": "ChefAI backend running"}
