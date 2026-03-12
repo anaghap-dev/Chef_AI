@@ -1,7 +1,7 @@
 import { MdKeyboardVoice } from "react-icons/md";
 import { FiCamera, FiSearch } from "react-icons/fi";
 
-function SearchBar() {
+function SearchBar({ ingredients, setIngredients }) {
   return (
     <div style={styles.container}>
 
@@ -12,6 +12,8 @@ function SearchBar() {
         <input
           type="text"
           placeholder="Enter ingredients..."
+          value={ingredients}
+          onChange={(e) => setIngredients(e.target.value)}
           style={styles.input}
         />
 
