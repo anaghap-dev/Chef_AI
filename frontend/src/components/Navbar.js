@@ -26,7 +26,7 @@ function Navbar() {
         <button style={styles.button}>Grocery List</button>
         <button style={styles.button}>Login</button>
         <button style={styles.button}>Sign Up</button>
-
+        <FiSearch size={24} color="#333" style={{marginLeft: "10px"}} />
     
 
       </div>
