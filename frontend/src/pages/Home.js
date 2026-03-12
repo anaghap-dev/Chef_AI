@@ -17,19 +17,17 @@ function Home(){
 
     try {
 
-      const response = await fetch("http://127.0.0.1:5000/api/search", {
+      const response = await fetch("http://127.0.0.1:5000/search/text", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          ingredients: ingredients
-        })
+        body: JSON.stringify({ ingredients  })
       })
 
       const data = await response.json()
 
-      setRecipes(data)
+      setRecipes(data.recipes)
 
     } catch (error) {
       console.error("Error fetching recipes:", error)
