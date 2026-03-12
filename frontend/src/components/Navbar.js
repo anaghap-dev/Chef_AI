@@ -1,71 +1,32 @@
-import React from "react";
-import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { FiSearch } from "react-icons/fi";
 
 function Navbar() {
-
-  const navbarStyle = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "15px 40px",
-    background: "#ffffff",
-    borderBottom: "1px solid #eee"
-  };
-
-  const logoSection = {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px"
-  };
-
-  const navLinks = {
-    display: "flex",
-    gap: "20px"
-  };
-
-  const buttonStyle = {
-    textDecoration: "none",
-    backgroundColor: "#f47b5d",
-    color: "white",
-    padding: "8px 16px",
-    borderRadius: "6px",
-    fontWeight: "500"
-  };
-
   return (
 
-    <div style={navbarStyle}>
+    <div style={styles.nav}>
 
-      {/* Logo */}
-      <div style={logoSection}>
+      {/* Left Side - Brand */}
+      <div style={styles.brand}>
 
-        <img
-          src={logo}
-          alt="ChefAI"
-          style={{width:"100px"}}
-        />
+        <h2 style={styles.title}>
+          Chef<span style={{color:"#ff6b4a"}}>AI</span>
+        </h2>
 
-        <h1 style={{fontSize:"26px"}}>
-          Chef<span style={{color:"#f47b5d"}}>AI</span>
-        </h1>
+        <img src={logo} alt="logo" style={styles.logo} />
 
       </div>
 
-      {/* Navigation Buttons */}
-      <div style={navLinks}>
 
-        <Link to="/grocerycart" style={buttonStyle}>
-          Grocery Cart
-        </Link>
+      {/* Right Side - Buttons */}
+      <div style={styles.menu}>
 
-        <Link to="#" style={buttonStyle}>
-          Profile
-        </Link>
+        <button style={styles.button}>Favourites</button>
+        <button style={styles.button}>Grocery List</button>
+        <button style={styles.button}>Login</button>
+        <button style={styles.button}>Sign Up</button>
 
-        <Link to="#" style={buttonStyle}>
-          Login
-        </Link>
+    
 
       </div>
 
@@ -73,5 +34,48 @@ function Navbar() {
 
   );
 }
+
+const styles = {
+
+nav:{
+  display:"flex",
+  justifyContent:"space-between",
+  alignItems:"center",
+  padding:"20px"
+},
+
+brand:{
+  display:"flex",
+  alignItems:"center",
+  gap:"15px"
+},
+
+title:{
+  fontSize:"48px",
+  margin:0
+},
+
+logo:{
+  width:"120px",
+  height:"120px",
+  objectFit:"contain"
+},
+
+menu:{
+  display:"flex",
+  alignItems:"center",
+  gap:"15px"
+},
+
+button:{
+  padding:"8px 16px",
+  border:"none",
+  borderRadius:"30px",
+  background:"#f27559",
+  cursor:"pointer",
+  fontSize:"20px"
+}
+
+};
 
 export default Navbar;

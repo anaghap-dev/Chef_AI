@@ -1,11 +1,10 @@
-
 import Navbar from "../components/Navbar"
 import Hero from "../components/Hero"
 import SearchBar from "../components/SearchBar"
 import GenerateButton from "../components/GenerateButton"
 import SuggestedRecipes from "../components/SuggestedRecipes"
-import WhyChefAI from "../components/WhyChefAI"
-import Footer from "../components/Footer"
+import WhyChefAI from "../components/WhyChefAI";
+import Footer from "../components/Footer";
 
 function Home(){
 
@@ -33,3 +32,4 @@ function Home(){
 }
 
 export default Home
+
