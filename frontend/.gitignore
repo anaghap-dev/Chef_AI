@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
@@ -22,25 +21,3 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-=======
-# Python virtual environment
-venv/
-backend/venv/
-
-# Python cache
-__pycache__/
-*.pyc
-
-# VS Code
-.vscode/
-
-# uploads
-backend/uploads/
-
-# datasets
-backend/recipes.csv
-backend/data/
-
-# system files
-.DS_Store
->>>>>>> ae27d5616ee6401ce36b416e93c1e16f5315e668

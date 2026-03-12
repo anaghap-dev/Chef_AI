@@ -1,0 +1,133 @@
+body{
+background:#f7f5f3;
+font-family:Arial, sans-serif;
+}
+
+.grocery-container{
+width:420px;
+margin:auto;
+padding:20px;
+}
+
+/* HEADER */
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.logo-section{
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+/* BIGGER LOGO */
+
+.logo-section img{
+width:45px;
+height:45px;
+object-fit:contain;
+}
+
+/* CHEFAI TEXT */
+
+.logo-text{
+font-size:26px;
+font-weight:600;
+color:black;
+}
+
+.logo-text span{
+color:#ff7a00;
+font-weight:700;
+}
+
+/* MENU */
+
+.menu{
+font-size:26px;
+cursor:pointer;
+}
+
+/* TITLE */
+
+.title{
+text-align:center;
+font-size:36px;
+margin-bottom:25px;
+color:#ff7a00;
+font-weight:700;
+}
+
+/* ADD BOX */
+
+.add-box{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+}
+
+.add-box input{
+flex:1;
+padding:10px;
+border-radius:8px;
+border:1px solid #ddd;
+}
+
+.add-box button{
+background:#ff7a00;
+color:white;
+border:none;
+padding:10px 16px;
+border-radius:8px;
+cursor:pointer;
+font-size:18px;
+}
+
+/* ITEMS */
+
+.item-card{
+background:white;
+padding:15px;
+border-radius:12px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:12px;
+box-shadow:0 2px 5px rgba(0,0,0,0.05);
+}
+
+.item-card h3{
+margin:0;
+}
+
+.item-card p{
+margin:0;
+color:gray;
+}
+
+.delete{
+border:none;
+background:none;
+cursor:pointer;
+font-size:18px;
+}
+
+/* SUMMARY */
+
+.summary{
+background:white;
+padding:20px;
+border-radius:12px;
+margin-top:20px;
+}
+
+.tip{
+margin-top:10px;
+background:#fff3e6;
+padding:10px;
+border-radius:8px;
+}
