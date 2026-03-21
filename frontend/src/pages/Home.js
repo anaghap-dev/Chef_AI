@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import SearchBar from "../components/SearchBar";
@@ -46,6 +47,7 @@ const recipes = [
 ];
 
 function Home(){
+  const [ingredients, setIngredients] = useState("");
 
   return(
 
@@ -55,7 +57,7 @@ function Home(){
 
       <Hero/>
 
-      <SearchBar/>
+      <SearchBar ingredients={ingredients} setIngredients={setIngredients}/>
 
       <GenerateButton/>
 
