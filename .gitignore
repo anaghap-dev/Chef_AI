@@ -13,8 +13,7 @@ __pycache__/
 backend/uploads/
 
 # datasets
-backend/recipes.csv
-backend/data/
+backend/data/recipes.csv
 
 # system files
 .DS_Store
