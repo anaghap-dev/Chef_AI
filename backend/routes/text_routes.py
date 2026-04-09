@@ -3,6 +3,7 @@ import pandas as pd
 import traceback
 
 from modules.recipe_matcher_prod import recommend_recipes, df, safe_str
+from modules.strict_recipe_matcher import get_strict_recipes
 
 text_routes = Blueprint("text_routes", __name__)
 
@@ -236,8 +237,8 @@ def search_by_text():
         ingredients = safe_str(data.get("ingredients", "")).strip()
         cuisine = data.get("cuisine")
         category = data.get("category")
-        allergies = data.get("allergies")
-        cooking_time = data.get("cooking_time")
+        allergies = data.get("allergies") or data.get("allergy")
+        cooking_time = data.get("cooking_time") or data.get("cooking_time_range")
         top_k = data.get("top_k", 5)
 
         # Validate input
@@ -271,6 +272,10 @@ def search_by_text():
             merged = merge_recipe_with_details(recipe)
             final_recipes.append(merged)
 
+        # Compute strict-match recipes separately
+        strict_recipes = get_strict_recipes(ingredients, top_k=1)
+        
+
         return jsonify({
             "success": True,
             "input_ingredients": ingredients,
@@ -283,6 +288,7 @@ def search_by_text():
             },
             "count": len(final_recipes),
             "recipes": final_recipes,
+            "strict_recipes": strict_recipes,
             "message": f"Found {len(final_recipes)} recipes matching your preferences"
         }), 200
 
@@ -294,7 +300,7 @@ def search_by_text():
             "message": f"Internal server error: {str(e)}",
             "recipes": []
         }), 500
-
+    
 
 # =========================
 # ROUTE: GET RECIPE DETAILS
