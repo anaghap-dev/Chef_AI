@@ -1,6 +1,6 @@
 import RecipeCard from "./RecipeCard";
 
-function SuggestedRecipes({ recipes }) {
+function SuggestedRecipes({ recipes = [] }) {
   return (
     <div style={{ padding: "20px" }}>
       <h3>Suggested for you</h3>
@@ -9,7 +9,9 @@ function SuggestedRecipes({ recipes }) {
         {recipes.map((recipe, index) => (
           <RecipeCard
             key={index}
-            recipe={recipe}   // pass full recipe object
+            recipe={recipe}
+            index={index}
+            allRecipes={recipes}   // IMPORTANT: pass full results list
           />
         ))}
       </div>

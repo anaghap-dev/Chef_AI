@@ -6,6 +6,7 @@ function RecipeDetails() {
   const navigate = useNavigate();
 
   const recipe = location.state?.recipe;
+  const previousResults = location.state?.previousResults || [];
 
   if (!recipe) {
     return (
@@ -15,7 +16,10 @@ function RecipeDetails() {
           <p style={styles.errorText}>
             Please go back and select a recipe from the suggestions page.
           </p>
-          <button style={styles.backButton} onClick={() => navigate("/")}>
+          <button
+            style={styles.backButton}
+            onClick={() => navigate("/")}
+          >
             Go Back Home
           </button>
         </div>
@@ -23,12 +27,23 @@ function RecipeDetails() {
     );
   }
 
+  const handleBackClick = () => {
+  navigate("/", {
+    state: {
+      preservedRecipes: previousResults
+    }
+  });
+};
+
   return (
     <div style={styles.page}>
       <div style={styles.container}>
         {/* RECIPE IMAGE */}
         <img
-          src={recipe.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"}
+          src={
+            recipe.image ||
+            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+          }
           alt={recipe.recipe_name || "Recipe"}
           style={styles.image}
         />
@@ -40,7 +55,7 @@ function RecipeDetails() {
 
         {/* SUBHEADING */}
         <h3 style={styles.subHeading}>
-          {recipe.final_recipe_name || recipe["Final recipe name"] }
+          {recipe.final_recipe_name || recipe["Final recipe name"] || ""}
         </h3>
 
         {/* CUISINE */}
@@ -65,7 +80,9 @@ function RecipeDetails() {
         <section style={styles.section}>
           <h2 style={styles.sectionTitle}>Instructions</h2>
           <p style={styles.sectionText}>
-            {recipe.Instructions || recipe.instructions || "No instructions available."}
+            {recipe.Instructions ||
+              recipe.instructions ||
+              "No instructions available."}
           </p>
         </section>
 
@@ -77,7 +94,7 @@ function RecipeDetails() {
             <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Calories</h4>
               <p style={styles.nutritionValue}>
-                {recipe["Calories kcal"] ?? recipe.calories ?? "N/A"}
+                {recipe["Calories (kcal)"] ?? recipe.calories ?? "N/A"}
               </p>
             </div>
 
@@ -139,8 +156,11 @@ function RecipeDetails() {
           </div>
         </section>
 
-        <button style={styles.backButton} onClick={() => navigate("/")}>
-          ← Back to Recipes
+        <button
+          style={styles.backButton}
+          onClick={handleBackClick}
+        >
+          ← Back to Home Page
         </button>
       </div>
     </div>
