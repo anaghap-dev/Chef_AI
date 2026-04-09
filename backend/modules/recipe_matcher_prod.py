@@ -152,6 +152,11 @@ def recommend_recipes(user_input, cuisine=None, top_k=5):
         results.append({
             'rank': int(rank),
             'recipe_name': str(recipe['recipe_name']),
+            'final_recipe_name': str(
+                recipe.get('final_recipe_name', '') or
+                recipe.get('Final recipe name', '') or
+                recipe.get('Final Recipe Name', '')
+            ),
             'ingredients': str(recipe['ingredients']),
             'Cuisine': str(recipe['Cuisine']),
             'CookingTime': int(recipe['CookingTime']),

@@ -1,8 +1,11 @@
+import traceback
+
 from flask import Blueprint, request, jsonify
-from modules.recipe_matcher_prod import recommend_recipes
+from modules.recipe_matcher_prod import recommend_recipes, df
 from modules.health_preferences import (
     HealthPreferences, health_matcher, COMMON_ALLERGENS, DIETARY_PREFERENCES
 )
+import pandas as pd
 
 text_routes = Blueprint("text_routes", __name__)
 
@@ -70,9 +73,55 @@ def search_by_text():
             if not health_matcher.check_nutritional_requirements(recipe_idx, health_prefs):
                 continue
 
+            # Add full recipe details
+            full_recipe_matches = df[df['recipe_name'] == recipe['recipe_name']]
+            if len(full_recipe_matches) == 0:
+                continue
+            full_recipe = full_recipe_matches.iloc[0]
+
+            def safe_str(value):
+                return '' if pd.isna(value) else str(value)
+
+            existing_final_name = safe_str(recipe.get('final_recipe_name', ''))
+
+            full_final_name = (
+               safe_str(full_recipe.get('final_recipe_name', '')) or
+               safe_str(full_recipe.get('Final recipe name', '')) or
+               safe_str(full_recipe.get('Final Recipe Name', ''))
+            )
+
+            recipe['final_recipe_name'] = existing_final_name or full_final_name or safe_str(recipe.get('recipe_name', ''))
+            recipe['Instructions'] = safe_str(full_recipe.get('Instructions', ''))
+            # Try all possible column name variations
+            detailed_ing = (
+              safe_str(full_recipe.get('Detailed_Ingredients', '')) or
+              safe_str(full_recipe.get('Detailed ingredients', '')) or
+              safe_str(full_recipe.get('Detailed Ingredients', '')) or
+              safe_str(full_recipe.get('Detailed_ingredients', ''))
+        )
+
+            # Fallback only if no detailed ingredients found
+            if not detailed_ing:
+              detailed_ing = safe_str(full_recipe.get('ingredients', ''))
+
+            recipe['Detailed_Ingredients'] = detailed_ing
+            recipe['Category'] = safe_str(full_recipe.get('Category', ''))
+            recipe['Allergy'] = safe_str(full_recipe.get('Allergy', ''))
+
             # Add nutritional info
             nutrition = health_matcher.get_nutrition_info(recipe_idx)
             recipe['nutrition'] = nutrition
+
+            # Flatten nutrition for frontend compatibility
+            recipe['Calories kcal'] = nutrition.get('Calories (kcal)')
+            recipe['Protein g'] = nutrition.get('Protein (g)')
+            recipe['Carbohydrates g'] = nutrition.get('Carbohydrates (g)')
+            recipe['Fats g'] = nutrition.get('Fats (g)')
+            recipe['Free Sugar g'] = nutrition.get('Free Sugar (g)')
+            recipe['Fibre g'] = nutrition.get('Fibre (g)')
+            recipe['Sodium mg'] = nutrition.get('Sodium (mg)')
+            recipe['Calcium mg'] = nutrition.get('Calcium (mg)')
+            recipe['Iron mg'] = nutrition.get('Iron (mg)')
 
             filtered_recipes.append(recipe)
 
@@ -88,6 +137,24 @@ def search_by_text():
             "message": f"Found {len(final_recipes)} recipes matching your preferences"
         })
 
+    except Exception as e:
+      print("ERROR in /search/text:")
+      traceback.print_exc()
+      return jsonify({"error": str(e)}), 500
+
+
+@text_routes.route("/search/cuisines", methods=["GET"])
+def get_cuisines():
+    """Get list of available cuisines in the dataset"""
+    try:
+        from modules.recipe_matcher_prod import df, initialize_model
+        if df is None:
+            initialize_model()
+        cuisines = sorted(df['Cuisine'].dropna().unique().tolist())
+        return jsonify({
+            "cuisines": cuisines,
+            "count": len(cuisines)
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

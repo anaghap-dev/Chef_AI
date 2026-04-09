@@ -138,7 +138,7 @@ class HealthAwareRecipeMatcher:
         recipe = self.df.iloc[recipe_idx]
 
         nutrition_cols = ['Calories (kcal)', 'Protein (g)', 'Carbohydrates (g)',
-                         'Fats (g)', 'Fibre (g)', 'Sodium (mg)', 'Calcium (mg)', 'Iron (mg)']
+                         'Fats (g)', 'Fibre (g)', 'Sodium (mg)', 'Calcium (mg)', 'Iron (mg)', 'Free Sugar (g)']
 
         nutrition = {}
         for col in nutrition_cols:
@@ -157,7 +157,7 @@ class HealthAwareRecipeMatcher:
         adjusted = {}
 
         scaling_fields = ['Calories (kcal)', 'Protein (g)', 'Carbohydrates (g)',
-                         'Fats (g)', 'Fibre (g)', 'Sodium (mg)', 'Calcium (mg)', 'Iron (mg)']
+                         'Fats (g)', 'Fibre (g)', 'Sodium (mg)', 'Calcium (mg)', 'Iron (mg)', 'Free Sugar (g)']
 
         for key, value in nutrition_info.items():
             if key in scaling_fields and value is not None:
