@@ -1,10 +1,38 @@
 import React from "react";
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 function RecipeDetails() {
   const location = useLocation();
   const navigate = useNavigate();
   const recipe = location.state?.recipe; 
+  const [isSaved, setIsSaved] = React.useState(false);
+  const [popupMessage, setPopupMessage] = React.useState("");
+  const [showPopup, setShowPopup] = React.useState(false);
+
+  // ✅ FIX 1: Proper useEffect
+  useEffect(() => {
+    if (!recipe) return;
+
+    const saved = JSON.parse(localStorage.getItem("savedRecipes")) || [];
+
+    const exists = saved.some(
+      (r) => r.recipe_name === recipe.recipe_name
+    );
+
+    setIsSaved(exists); // ✅ FIX 2
+  }, [recipe]);
+
+  // ✅ FIX 3: Separate useEffect (not nested)
+  useEffect(() => {
+    if (!showPopup) return;
+
+    const timer = setTimeout(() => {
+      setShowPopup(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [showPopup]);
 
   if (!recipe) {
     return (
@@ -26,13 +54,42 @@ function RecipeDetails() {
   }
 
   const handleBackClick = () => {
-  navigate("/", {
-    state: {
-       recipes: location.state?.recipes || [],
-      strictRecipes: location.state?.strictRecipes || []
+    navigate("/", {
+      state: {
+        recipes: location.state?.recipes || [],
+        strictRecipes: location.state?.strictRecipes || []
+      }
+    });
+  };
+
+  const handleSaveRecipe = () => {
+    const user = localStorage.getItem("user");
+
+    if (!user) {
+      setPopupMessage("To save a recipe, please login/signup");
+      setShowPopup(true);
+      return;
     }
-  });
-};
+
+    let saved = JSON.parse(localStorage.getItem("savedRecipes")) || [];
+
+    if (isSaved) {
+      saved = saved.filter(
+        (r) => r.recipe_name !== recipe.recipe_name
+      );
+      localStorage.setItem("savedRecipes", JSON.stringify(saved));
+      setIsSaved(false);
+
+      setPopupMessage("Recipe removed from saved recipes.");
+      setShowPopup(true);
+    } else {
+      saved.push(recipe);
+      localStorage.setItem("savedRecipes", JSON.stringify(saved));
+      setIsSaved(true);
+      setPopupMessage("Recipe saved successfully!");
+      setShowPopup(true);
+    }
+  };
 
   return (
     <div style={styles.page}>
@@ -47,10 +104,23 @@ function RecipeDetails() {
           style={styles.image}
         />
 
-        {/* MAIN HEADING */}
+        <div style={styles.headerRow}>
+           {/* MAIN HEADING */}
         <h1 style={styles.mainHeading}>
           {recipe.recipe_name || "Recipe Name"}
         </h1>
+          <button
+            style={{
+              ...styles.saveButton,
+              backgroundColor: isSaved ? "#ef4444" : "#fa1515",
+              color: isSaved ? "#fff" : "#111"
+            }}
+            onClick={handleSaveRecipe}
+          >
+            {isSaved ? "❤️ Saved" : "Save Recipe"}
+          </button>
+        </div>
+
 
         {/* SUBHEADING */}
         <h3 style={styles.subHeading}>
@@ -97,7 +167,7 @@ function RecipeDetails() {
               </p>
             </div>
 
-            <div style={styles.nutritionCard}>
+             <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Carbohydrates</h4>
               <p style={styles.nutritionValue}>
                 {recipe["Carbohydrates g"] ?? recipe.carbohydrates ?? "N/A"}
@@ -162,9 +232,26 @@ function RecipeDetails() {
           ← Back to Home Page
         </button>
       </div>
+
+      {/* ✅ FIX 4: popup inside main return */}
+      {showPopup && (
+        <div style={styles.overlay}>
+          <div style={styles.popup}>
+            <p style={styles.popupText}>{popupMessage}</p>
+
+            <button
+              style={styles.popupButton}
+              onClick={() => setShowPopup(false)}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 const styles = {
   page: {
@@ -271,7 +358,64 @@ const styles = {
     fontSize: "1rem",
     color: "#6b7280",
     marginBottom: "20px"
-  }
+  },
+  saveContainer: {
+    display: "flex",
+    justifyContent: "flex-end",
+    marginBottom: "10px"
+  },
+  saveButton: {
+    padding: "10px 16px",
+    borderRadius: "20px",
+    border: "none",
+    backgroundColor: "#facc15",
+    color: "#111",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "0.3s",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.15)"
+  },
+  overlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999
+  },
+  popup: {
+    backgroundColor: "#fff",
+    padding: "25px 30px",
+    borderRadius: "15px",
+    textAlign: "center",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+    maxWidth: "300px"
+  },
+  popupText: {
+    fontSize: "16px",
+    marginBottom: "20px",
+    color: "#111"
+  },
+  popupButton: {
+    padding: "10px 18px",
+    borderRadius: "10px",
+    border: "none",
+    backgroundColor: "#111827",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: "600"
+  },
+  headerRow: {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "10px",
+  marginBottom: "10px"
+},
 };
 
 export default RecipeDetails;
