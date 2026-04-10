@@ -4,6 +4,7 @@ import logo from "../assets/logo.png";
 
 function Navbar() {
  
+  const user = JSON.parse(localStorage.getItem("user"));
   const navbarStyle = {
     display: "flex",
     justifyContent: "space-between",
@@ -59,11 +60,13 @@ function Navbar() {
           Grocery Cart
         </Link>
 
+        {user && (
         <Link to="/profile" style={buttonStyle}>
           Profile
         </Link>
+        )}
 
-        {localStorage.getItem("user") ? (
+        {user? (
       <button
         onClick={() => {
          localStorage.removeItem("user");

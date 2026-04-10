@@ -153,7 +153,8 @@ const Profile = () => {
                         <button 
                           key={pref.id} 
                           className={`modern-chip ${pref.active ? 'filled' : ''}`}
-                          onClick={() => setDietaryPrefs(dietaryPrefs.map(p => p.id === pref.id ? {...p, active: !p.active} : p))}
+                          onCli
+                          ck={() => setDietaryPrefs(dietaryPrefs.map(p => p.id === pref.id ? {...p, active: !p.active} : p))}
                         >
                           {pref.active && <Check size={16} strokeWidth={4} />}
                           {pref.label}

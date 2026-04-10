@@ -9,6 +9,9 @@ function LoginSignup() {
   
   const handleLogin = (e) => {
     e.preventDefault();
+
+    const username= "user";
+    localStorage.setItem("user",JSON.stringify({username}));
     alert("✅ Login successful! Welcome back to ChefAI 👨‍🍳");
     navigate("/profile"); // redirect to profile page after login
   };
