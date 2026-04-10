@@ -1,5 +1,6 @@
 import React, { useState, useRef ,useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../pages/supabaseClient';
 import './ProfilePage.css';
 import { 
   ArrowLeft, Settings, Share2, Calendar, 
@@ -22,12 +23,17 @@ const Profile = () => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-  const loggedInUser = localStorage.getItem("user");
+  const checkUser = async () => {
+    const { data } = await supabase.auth.getUser();
 
-  if (!loggedInUser) {
-    navigate("/login"); // redirect if not logged in
-  }
-}, [navigate]);  
+    if (!data.user) {
+      navigate("/login");
+    }
+  };
+
+  checkUser();
+}, [navigate]);
+  
 
   const handleShare = async () => {
     const shareData = {
