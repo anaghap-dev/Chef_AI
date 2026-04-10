@@ -59,7 +59,7 @@ function Navbar() {
           Grocery Cart
         </Link>
 
-        <Link to="#" style={buttonStyle}>
+        <Link to="/profile" style={buttonStyle}>
           Profile
         </Link>
 

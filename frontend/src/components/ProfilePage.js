@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef ,useEffect} from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ProfilePage.css';
 import { 
   ArrowLeft, Settings, Share2, Calendar, 
@@ -10,7 +11,7 @@ const Profile = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
-  
+  const navigate = useNavigate();
   const [user, setUser] = useState({
     name: 'Alex Chefson',
     email: 'alex.chefson@chefai.app',
@@ -19,6 +20,14 @@ const Profile = () => {
   });
 
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+  const loggedInUser = localStorage.getItem("user");
+
+  if (!loggedInUser) {
+    navigate("/login"); // redirect if not logged in
+  }
+}, [navigate]);  
 
   const handleShare = async () => {
     const shareData = {
@@ -178,7 +187,10 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <div className="setting-tile danger-tile" onClick={() => alert('Logout Success')}>
+                <div className="setting-tile danger-tile" onClick={() => {
+                       localStorage.removeItem("user");
+                      navigate("/login");
+                      }}>
                   <div className="tile-left">
                     <div className="tile-icon red-bg"><LogOut size={20} /></div>
                     <span className="tile-label">Logout Account</span>

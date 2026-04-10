@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import GroceryCart from "./pages/GroceryCart";
 import RecipeDetails from "./pages/RecipeDetails";
 import LoginSignup from "./LoginSignup";
+import ProfilePage from "./components/ProfilePage";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/grocerycart" element={<GroceryCart />} />
         <Route path="/recipe-details" element={<RecipeDetails />} />
         <Route path="/login" element={<LoginSignup />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Routes>
 
     </BrowserRouter>

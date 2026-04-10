@@ -1,13 +1,16 @@
 import React, { useState } from "react";
+import { useNavigate ,Link} from "react-router-dom";
 import "./style.css";
 
 function LoginSignup() {
 
   const [page, setPage] = useState("login");
-
+  const navigate = useNavigate();   
+  
   const handleLogin = (e) => {
     e.preventDefault();
     alert("✅ Login successful! Welcome back to ChefAI 👨‍🍳");
+    navigate("/profile"); // redirect to profile page after login
   };
 
   const handleSignup = (e) => {
@@ -17,6 +20,27 @@ function LoginSignup() {
 
   return (
     <div className="login-container">
+      <div style={{
+       position: "absolute",
+      top: "20px",
+       right: "20px",
+       zIndex:9999
+    }}>
+  <button type="button"
+    onClick={() =>  navigate("/")}
+ style={{
+      padding: "8px 14px",
+      borderRadius: "8px",
+      border: "none",
+      backgroundColor: "#f07238",
+      color: "#fff",
+      fontWeight: "600",
+      cursor: "pointer"
+    }}
+  >
+    Home
+  </button>
+    </div>
 
       <div className="bg-pattern"></div>
 
@@ -43,7 +67,7 @@ function LoginSignup() {
               </div>
 
               <div className="forgot-section">
-                <a href="/">Forgot Password?</a>
+                <Link to="/">Forgot Password?</Link>
               </div>
 
               <button className="login-button">Login</button>
