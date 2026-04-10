@@ -24,7 +24,7 @@ align-items:center;
 gap:12px;
 }
 
-/* BIGGER LOGO */
+/* LOGO */
 
 .logo-section img{
 width:45px;
@@ -32,7 +32,7 @@ height:45px;
 object-fit:contain;
 }
 
-/* CHEFAI TEXT */
+/* TEXT */
 
 .logo-text{
 font-size:26px;
@@ -45,11 +45,20 @@ color:#ff7a00;
 font-weight:700;
 }
 
-/* MENU */
+/* HOME BUTTON */
 
-.menu{
-font-size:26px;
-cursor:pointer;
+.home-btn{
+text-decoration:none;
+background:#ff7a00;
+color:white;
+padding:8px 16px;
+border-radius:8px;
+font-weight:600;
+transition:0.3s;
+}
+
+.home-btn:hover{
+background:#e66f00;
 }
 
 /* TITLE */
@@ -130,4 +139,23 @@ margin-top:10px;
 background:#fff3e6;
 padding:10px;
 border-radius:8px;
+}
+
+/* PDF BUTTON */
+
+.pdf-btn{
+margin-top:20px;
+width:100%;
+padding:12px;
+background:#ff7a00;
+color:white;
+border:none;
+border-radius:8px;
+font-weight:600;
+cursor:pointer;
+transition:0.3s;
+}
+
+.pdf-btn:hover{
+background:#e66f00;
 }

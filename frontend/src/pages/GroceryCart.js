@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import jsPDF from "jspdf"; // ✅ added
 import "./GroceryCart.css";
 import logo from "../assets/logo.png";
 
@@ -26,7 +28,6 @@ const tips = [
 const randomTip = tips[Math.floor(Math.random() * tips.length)];
 
 const addItem = () => {
-
 if (newItem.trim() !== "") {
 
 setItems([
@@ -38,11 +39,29 @@ setNewItem("");
 setNewQty("");
 
 }
-
 };
 
 const deleteItem = (index) => {
 setItems(items.filter((_, i) => i !== index));
+};
+
+// ✅ PDF FUNCTION
+const downloadPDF = () => {
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.text("My Grocery List", 20, 20);
+
+  items.forEach((item, index) => {
+    doc.setFontSize(12);
+    doc.text(
+      `${index + 1}. ${item.name} - ${item.qty}`,
+      20,
+      30 + index * 10
+    );
+  });
+
+  doc.save("grocery-list.pdf");
 };
 
 return (
@@ -59,10 +78,11 @@ return (
 <h2 className="logo-text">
 Chef<span>AI</span>
 </h2>
-
 </div>
 
-<div className="menu">☰</div>
+<Link to="/" className="home-btn">
+Home
+</Link>
 
 </div>
 
@@ -129,6 +149,12 @@ onClick={()=>deleteItem(index)}
 </div>
 
 </div>
+
+{/* ✅ PDF BUTTON */}
+
+<button onClick={downloadPDF} className="pdf-btn">
+Download as PDF
+</button>
 
 </div>
 
