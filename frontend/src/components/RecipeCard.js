@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
 
-function RecipeCard({ recipe,allRecipes }) {
+function RecipeCard({ recipe,allRecipes,strictRecipes }) {
   const navigate = useNavigate();
 
   const handleViewRecipe = () => {
     navigate("/recipe-details", {
   state: {
     recipe,
-    previousResults: allRecipes
+    recipes: allRecipes || [],
+    strictRecipes:strictRecipes ?? null
   }
 });
   };

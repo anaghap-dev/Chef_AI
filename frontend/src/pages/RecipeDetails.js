@@ -4,9 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 function RecipeDetails() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  const recipe = location.state?.recipe;
-  const previousResults = location.state?.previousResults || [];
+  const recipe = location.state?.recipe; 
 
   if (!recipe) {
     return (
@@ -30,7 +28,8 @@ function RecipeDetails() {
   const handleBackClick = () => {
   navigate("/", {
     state: {
-      preservedRecipes: previousResults
+       recipes: location.state?.recipes || [],
+      strictRecipes: location.state?.strictRecipes || []
     }
   });
 };

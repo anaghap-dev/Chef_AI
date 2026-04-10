@@ -1,6 +1,6 @@
 import RecipeCard from "./RecipeCard";
 
-function SuggestedRecipes({ recipes = [] }) {
+function SuggestedRecipes({ recipes,strictRecipes = [] }) {
   return (
     <div style={{ padding: "20px" }}>
       <h3>Suggested for you</h3>
@@ -12,6 +12,7 @@ function SuggestedRecipes({ recipes = [] }) {
             recipe={recipe}
             index={index}
             allRecipes={recipes}   // IMPORTANT: pass full results list
+            strictRecipes={strictRecipes}
           />
         ))}
       </div>

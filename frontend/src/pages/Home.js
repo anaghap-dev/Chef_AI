@@ -94,14 +94,10 @@ function Home() {
   const [selectedCookingTime, setSelectedCookingTime] = useState("");
   const [selectedCuisine, setSelectedCuisine] = useState("");
   const [allergy, setAllergy] = useState("");
-
+  const [strictRecipes, setStrictRecipes] = useState(null); // 🔥 NEW STATE
   const location = useLocation();
 
   const [recipes, setRecipes] = useState(defaultRecipes);
-
-  // 🔥 NEW STATE
-  const [strictRecipe, setStrictRecipe] = useState(null);
-
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState(null);
@@ -110,41 +106,52 @@ function Home() {
   // LOAD STATE
   // =========================
   useEffect(() => {
-    const savedState = localStorage.getItem("recipeSearchState");
+  // ✅ PRIORITY: if coming from navigation → skip localStorage
+  if (location.state) return;
 
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
+  const savedState = localStorage.getItem("recipeSearchState");
 
-        if (parsed.recipes && parsed.recipes.length > 0) {
-          setRecipes(parsed.recipes);
-          setStrictRecipe(parsed.strictRecipe || null);
+  if (savedState) {
+    try {
+      const parsed = JSON.parse(savedState);
 
-          setIngredients(parsed.ingredients || "");
-          setSelectedCuisine(parsed.selectedCuisine || "");
-          setSelectedCategory(parsed.selectedCategory || "");
-          setSelectedCookingTime(parsed.selectedCookingTime || "");
-          setAllergy(parsed.allergy || "");
-          setMessage(parsed.message || "");
-          return;
-        }
-      } catch (e) {
-        console.error("Error parsing saved state", e);
+      if (parsed.recipes && parsed.recipes.length > 0) {
+        setRecipes(parsed.recipes);
+        setStrictRecipes(parsed.strictRecipes || null);
+
+        setIngredients(parsed.ingredients || "");
+        setSelectedCuisine(parsed.selectedCuisine || "");
+        setSelectedCategory(parsed.selectedCategory || "");
+        setSelectedCookingTime(parsed.selectedCookingTime || "");
+        setAllergy(parsed.allergy || "");
+        setMessage(parsed.message || "");
+        return;
       }
+    } catch (e) {
+      console.error("Error parsing saved state", e);
     }
+  }
 
-    setRecipes(defaultRecipes);
-  }, []);
+  setRecipes(defaultRecipes);
+}, [location.state]);
 
   // =========================
   // BACK NAVIGATION FIX
   // =========================
   useEffect(() => {
-    if (location.state?.preservedRecipes?.length > 0) {
-      setRecipes(location.state.preservedRecipes);
-      setStrictRecipe(location.state.strictRecipe || null);
+  if (location.state) {
+    if (location.state.recipes) {
+      setRecipes(location.state.recipes);
     }
-  }, [location]);
+
+    if ("strictRecipes" in location.state) {
+      setStrictRecipes(location.state.strictRecipes);
+    }
+
+    // ✅ VERY IMPORTANT (prevents swap bug)
+    window.history.replaceState({}, document.title);
+  }
+}, [location]);
 
   // =========================
   // SAVE STATE
@@ -157,7 +164,7 @@ function Home() {
       selectedCookingTime,
       allergy,
       recipes,
-      strictRecipe, // 🔥 save strict
+      strictRecipes, // 🔥 save strict
       message
     };
 
@@ -169,7 +176,7 @@ function Home() {
     selectedCookingTime,
     allergy,
     recipes,
-    strictRecipe,
+    strictRecipes,
     message
   ]);
 
@@ -208,34 +215,44 @@ function Home() {
 
       const data = await response.json();
 
-      // =========================
-      // NORMAL RECIPES
-      // =========================
-      if (data.recipes && data.recipes.length > 0) {
-        const transformed = data.recipes.map((r) => ({
-          ...r,
-          image:
-            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
-        }));
+     // =========================
+// 🔥 STRICT RECIPE FIRST
+// =========================
+let strict = null;
 
-        setRecipes(transformed);
-      } else {
-        setRecipes([]);
-      }
+if (data.strict_recipes && data.strict_recipes.length > 0) {
+  strict = {
+    ...data.strict_recipes[0],
+    time: data.strict_recipes[0].CookingTime ? `${data.strict_recipes[0].CookingTime} mins` : "N/A",
+    cuisine: data.strict_recipes[0].Cuisine ||  "Unknown",
+    image:
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+  };
+  setStrictRecipes(strict);
+} else {
+  setStrictRecipes(null);
+}
 
-      // =========================
-      // 🔥 STRICT RECIPE
-      // =========================
-      if (data.strict_recipes && data.strict_recipes.length > 0) {
-        const strict = {
-          ...data.strict_recipes[0],
-          image:
-            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
-        };
-        setStrictRecipe(strict);
-      } else {
-        setStrictRecipe(null);
-      }
+// =========================
+// NORMAL RECIPES (FILTERED)
+// =========================
+if (data.recipes && data.recipes.length > 0) {
+  const transformed = data.recipes
+    .map((r) => ({
+      ...r,
+      time: r.CookingTime ? `${r.CookingTime} mins` : "N/A",
+      cuisine: r.Cuisine || "Unknown",
+      image:
+        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+    }))
+    // 🔥 REMOVE STRICT FROM LIST
+    .filter((r) => !strict || r.recipe_name !== strict.recipe_name);
+
+  setRecipes(transformed);
+} else {
+  setRecipes([]);
+}
+     
 
       setMessage("Found 5 Recipes");
     } catch (err) {
@@ -322,19 +339,19 @@ function Home() {
       {message && <p style={styles.center}>{message}</p>}
 
       {/* 🔹 NORMAL RESULTS */}
-      <SuggestedRecipes recipes={recipes} />
+      <SuggestedRecipes recipes={recipes} strictRecipes={strictRecipes} />
 
       {/* 🔥 STRICT RESULT */}
-      {strictRecipe && (
+      {strictRecipes && (
         <div style={styles.strictContainer}>
           <h2 style={styles.strictTitle}>
             🔥 Perfect Match (Only Your Ingredients)
           </h2>
 
           <RecipeCard
-            recipe={strictRecipe}
-            index={0}
-            allRecipes={[strictRecipe]}
+            recipe={strictRecipes}
+            strictRecipes={strictRecipes}
+            allRecipes={recipes}
           />
         </div>
       )}
