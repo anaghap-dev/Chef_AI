@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
 
 function Navbar() {
-
+ 
   const navbarStyle = {
     display: "flex",
     justifyContent: "space-between",
@@ -63,9 +63,21 @@ function Navbar() {
           Profile
         </Link>
 
-        <Link to="#" style={buttonStyle}>
-          Login
-        </Link>
+        {localStorage.getItem("user") ? (
+      <button
+        onClick={() => {
+         localStorage.removeItem("user");
+         window.location.reload();
+          }}
+         style={buttonStyle}
+         >
+         Logout
+         </button>
+        ) : (
+         <Link to="/login" style={buttonStyle}>
+         Login
+          </Link>
+        )}
 
       </div>
 
