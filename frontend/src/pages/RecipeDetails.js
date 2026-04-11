@@ -10,7 +10,7 @@ function RecipeDetails() {
   const [popupMessage, setPopupMessage] = React.useState("");
   const [showPopup, setShowPopup] = React.useState(false);
 
-  // ✅ FIX 1: Proper useEffect
+  
   useEffect(() => {
     if (!recipe) return;
 
