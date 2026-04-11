@@ -1,10 +1,28 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../pages/supabaseClient";
+import { useEffect, useState } from "react";
 
 function Navbar() {
- 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [user,setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // get current user
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
   const navbarStyle = {
     display: "flex",
     justifyContent: "space-between",
@@ -33,7 +51,7 @@ function Navbar() {
     borderRadius: "6px",
     fontWeight: "500"
   };
-
+  
   return (
 
     <div style={navbarStyle}>
@@ -41,11 +59,7 @@ function Navbar() {
       {/* Logo */}
       <div style={logoSection}>
 
-        <img
-          src={logo}
-          alt="ChefAI"
-          style={{width:"60px"}}
-        />
+        <img   src={logo}    alt="ChefAI"      style={{width:"60px"}}/>
 
         <h1 style={{fontSize:"26px"}}>
           Chef<span style={{color:"#f47b5d"}}>AI</span>
@@ -66,22 +80,23 @@ function Navbar() {
         </Link>
         )}
 
-        {user? (
-      <button
-        onClick={() => {
-         localStorage.removeItem("user");
-         window.location.reload();
-          }}
-         style={buttonStyle}
-         >
-         Logout
-         </button>
-        ) : (
+        {user ? (
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              setUser(null);
+              navigate("/"); // better than reload
+            }}
+            style={buttonStyle}
+          >
+            Logout
+          </button>
+        )  : (
          <Link to="/login" style={buttonStyle}>
          Login
           </Link>
         )}
-
+        
       </div>
 
     </div>
