@@ -1,75 +1,83 @@
-import React from "react";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { useLocation, useNavigate } from "react-router-dom";
 import { normalizeRecipe } from "../utils/normalizeRecipe";
 
 function RecipeDetails() {
   const location = useLocation();
-  const [fullRecipe, setFullRecipe] = useState(null);
   const navigate = useNavigate();
+  const recipe = location.state?.recipe;
+  const recipeName = recipe?.recipe_name;
+  const [fullRecipe, setFullRecipe] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
-  const normalizedRecipe = normalizeRecipe(
-  location.state?.recipe,
-  fullRecipe || {}
-);
-const recipeName = location.state?.recipe?.recipe_name;
+  const [isFavorite, setIsFavorite] = useState(false);
 
- useEffect(() => {
-  const fetchRecipe = async () => {
-    const recipeName = location.state?.recipe?.recipe_name;
+  const normalizedRecipe = normalizeRecipe(recipe, fullRecipe || {});
 
-    if (!recipeName) return;
-
-    const { data, error } = await supabase
-      .from("recipes")
-      .select("*")
-      .eq("recipe_name", recipeName)
-      .single();
-
-    if (error) {
-      console.log(error.message);
-      return;
-    }
-
-    setFullRecipe(data);
-  };
-
-  fetchRecipe();
-}, [location.state?.recipe]);
-
-useEffect(() => {
-  const checkSaved = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !fullRecipe) return;
-
-    const { data, error } = await supabase
-      .from("saved_recipes")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("recipe_name", recipeName);
-
-    if (error) return console.log(error.message);
-
-    setIsSaved(data?.length > 0);
-  };
-
-  checkSaved();
-}, [recipeName,fullRecipe]);
-  
-
-  // ✅ FIX 3: Separate useEffect (not nested)
   useEffect(() => {
-    if (!showPopup) return;
+    const fetchRecipe = async () => {
+      if (!recipeName) return;
 
-    const timer = setTimeout(() => {
-      setShowPopup(false);
-    }, 2000);
+      const { data, error } = await supabase
+        .from("recipes")
+        .select("*")
+        .eq("recipe_name", recipeName)
+        .single();
 
-    return () => clearTimeout(timer);
-  }, [showPopup]);
+      if (error) {
+        console.log(error.message);
+        return;
+      }
+
+      setFullRecipe(data);
+    };
+
+    fetchRecipe();
+  }, [recipeName]);
+
+  useEffect(() => {
+    const checkSaved = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !fullRecipe) return;
+
+      const { data, error } = await supabase
+        .from("saved_recipes")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("recipe_name", recipeName);
+
+      if (error) return console.log(error.message);
+
+      setIsSaved(data?.length > 0);
+    };
+
+    checkSaved();
+  }, [recipeName, fullRecipe]);
+
+  const handleAddMissing = (e) => {
+    if (!e.target.checked) return;
+
+    const newItems = [
+      { name: "Onion", qty: "2" },
+      { name: "Tomato", qty: "3" }
+    ];
+
+    const existing = JSON.parse(localStorage.getItem("groceryItems")) || [];
+
+    localStorage.setItem(
+      "groceryItems",
+      JSON.stringify([...existing, ...newItems])
+    );
+
+    setPopupMessage("Missing ingredients added to grocery cart!");
+    setShowPopup(true);
+  };
+
+  const handleSaveFavorite = () => {
+    setIsFavorite((prev) => !prev);
+  };
 
 
 
@@ -107,53 +115,52 @@ useEffect(() => {
   };
 
   const handleSaveRecipe = async () => {
-  console.log("CLICKED SAVE BUTTON");
+    console.log("CLICKED SAVE BUTTON");
 
-  const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    setPopupMessage("Please login to save recipes");
-    setShowPopup(true);
-    return;
-  }
-
-  try {
-    if (isSaved) {
-      const { error } = await supabase
-        .from("saved_recipes")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("recipe_name", recipeName);
-
-      if (error) throw error;
-
-      setIsSaved(false);
-      setPopupMessage("Removed from saved");
+    if (!user) {
+      setPopupMessage("Please login to save recipes");
       setShowPopup(true);
       return;
     }
 
-    const { error } = await supabase
-      .from("saved_recipes")
-      .insert([
-        {
-          user_id: user.id,
-          recipe_name: normalizedRecipe.name
-        }
-      ]);
+    try {
+      if (isSaved) {
+        const { error } = await supabase
+          .from("saved_recipes")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("recipe_name", recipeName);
 
-    if (error) throw error;
+        if (error) throw error;
 
-    setIsSaved(true);
-    setPopupMessage("Recipe saved ❤️");
-    setShowPopup(true);
+        setIsSaved(false);
+        setPopupMessage("Removed from saved");
+        setShowPopup(true);
+        return;
+      }
 
-  } catch (err) {
-    console.log("FULL ERROR:", err);
-          setPopupMessage(err.message);
-          setShowPopup(true);
-  }
-};
+      const { error } = await supabase
+        .from("saved_recipes")
+        .insert([
+          {
+            user_id: user.id,
+            recipe_name: normalizedRecipe.name
+          }
+        ]);
+
+      if (error) throw error;
+
+      setIsSaved(true);
+      setPopupMessage("Recipe saved ❤️");
+      setShowPopup(true);
+    } catch (err) {
+      console.log("FULL ERROR:", err);
+      setPopupMessage(err.message);
+      setShowPopup(true);
+    }
+  };
 
   return (
     <div style={styles.page}>
@@ -168,11 +175,10 @@ useEffect(() => {
           style={styles.image}
         />
 
-        <div style={styles.headerRow}>
-           {/* MAIN HEADING */}
-        <h1 style={styles.mainHeading}>
-          {normalizedRecipe.name || "Recipe Name"}
-        </h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <h1 style={styles.mainHeading}>
+            {normalizedRecipe.name || recipe?.recipe_name || "Recipe Name"}
+          </h1>
           <button
             style={{
               ...styles.saveButton,
@@ -183,8 +189,10 @@ useEffect(() => {
           >
             {isSaved ? "❤️ Saved" : "Save Recipe"}
           </button>
+          <span onClick={handleSaveFavorite} style={{ fontSize: "26px", cursor: "pointer" }}>
+            {isFavorite ? "❤️" : "🤍"}
+          </span>
         </div>
-
 
         {/* SUBHEADING */}
         <h3 style={styles.subHeading}>
@@ -207,6 +215,11 @@ useEffect(() => {
           </p>
         </section>
 
+        <label style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "10px",marginBottom: "20px" }}>
+  <input type="checkbox" onChange={handleAddMissing} />
+  Add missing ingredients to grocery cart
+</label>
+
         {/* INSTRUCTIONS */}
         <section style={styles.section}>
           <h2 style={styles.sectionTitle}>Instructions</h2>
@@ -228,7 +241,7 @@ useEffect(() => {
               </p>
             </div>
 
-             <div style={styles.nutritionCard}>
+            <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Carbohydrates</h4>
               <p style={styles.nutritionValue}>
                 { normalizedRecipe.carbs ?? "N/A"}
@@ -287,28 +300,47 @@ useEffect(() => {
         </section>
 
         <button
+  style={{
+    marginTop: "15px",
+    marginRight: "10px",
+    padding: "12px 18px",
+    border: "none",
+    borderRadius: "12px",
+    backgroundColor: "#f97316",
+    color: "#fff",
+    fontSize: "15px",
+    fontWeight: "600",
+    cursor: "pointer"
+  }}
+  onClick={() => navigate("/grocerycart",{
+    state: {fromRecipe:true,recipe}
+  })}
+>
+  🛒 View Grocery Cart
+</button>
+        <button
           style={styles.backButton}
           onClick={handleBackClick}
         >
           ← Back to Home Page
         </button>
-      </div>
+        {showPopup && (
+          <div style={styles.overlay}>
+            <div style={styles.popup}>
+              <p style={styles.popupText}>
+                {popupMessage}
+              </p>
 
-      {/* ✅ FIX 4: popup inside main return */}
-      {showPopup && (
-        <div style={styles.overlay}>
-          <div style={styles.popup}>
-            <p style={styles.popupText}>{popupMessage}</p>
-
-            <button
-              style={styles.popupButton}
-              onClick={() => setShowPopup(false)}
-            >
-              OK
-            </button>
+              <button
+                style={styles.popupButton}
+                onClick={() => setShowPopup(false)}
+              >
+                OK
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -420,63 +452,43 @@ const styles = {
     color: "#6b7280",
     marginBottom: "20px"
   },
-  saveContainer: {
-    display: "flex",
-    justifyContent: "flex-end",
-    marginBottom: "10px"
-  },
-  saveButton: {
-    padding: "10px 16px",
-    borderRadius: "20px",
-    border: "none",
-    backgroundColor: "#facc15",
-    color: "#111",
-    fontWeight: "600",
-    cursor: "pointer",
-    transition: "0.3s",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.15)"
-  },
   overlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 999
-  },
-  popup: {
-    backgroundColor: "#fff",
-    padding: "25px 30px",
-    borderRadius: "15px",
-    textAlign: "center",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-    maxWidth: "300px"
-  },
-  popupText: {
-    fontSize: "16px",
-    marginBottom: "20px",
-    color: "#111"
-  },
-  popupButton: {
-    padding: "10px 18px",
-    borderRadius: "10px",
-    border: "none",
-    backgroundColor: "#111827",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: "600"
-  },
-  headerRow: {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  backgroundColor: "rgba(0,0,0,0.5)",
   display: "flex",
-  justifyContent: "space-between",
+  justifyContent: "center",
   alignItems: "center",
-  gap: "10px",
-  marginBottom: "10px"
+  zIndex: 999
 },
+
+popup: {
+  backgroundColor: "#fff",
+  padding: "25px 30px",
+  borderRadius: "15px",
+  textAlign: "center",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+  maxWidth: "300px"
+},
+
+popupText: {
+  fontSize: "16px",
+  marginBottom: "20px",
+  color: "#111"
+},
+
+popupButton: {
+  padding: "10px 18px",
+  borderRadius: "10px",
+  border: "none",
+  backgroundColor: "#111827",
+  color: "#fff",
+  cursor: "pointer",
+  fontWeight: "600"
+}
 };
 
 export default RecipeDetails;
