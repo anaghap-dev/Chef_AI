@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../pages/supabaseClient';
 import './ProfilePage.css';
 import { 
-  ArrowLeft, Settings, Share2, Calendar, 
-  Check, Camera, Bell, Moon, LogOut, ChevronRight, Save
+  ArrowLeft, Settings,  
+  Camera, Bell, Moon, LogOut, ChevronRight
 } from 'lucide-react';
 
 const Profile = () => {
-  const [isEditing, setIsEditing] = useState(false);
+
   const [showSettings, setShowSettings] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [savedRecipes, setSavedRecipes] = useState([]);
 
   const fileInputRef = useRef(null);
 
@@ -64,10 +65,14 @@ const Profile = () => {
     } catch (err) { console.error(err); }
   };
 
-  const handleBack = () => {
-    if (showSettings) setShowSettings(false);
-    else if (isEditing) setIsEditing(false);
-  };
+      const handleBack = () => {
+  if (showSettings) {
+    setShowSettings(false);
+  } else {
+    navigate("/");
+  }
+};
+
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -78,12 +83,11 @@ const Profile = () => {
     }
   };
 
-  const [dietaryPrefs, setDietaryPrefs] = useState([
-    { id: 1, label: 'Vegan', active: true },
-    { id: 2, label: 'Gluten-free', active: true },
-    { id: 3, label: 'Keto', active: false },
-    { id: 4, label: 'Low Carb', active: false },
-  ]);
+  const handleDeleteRecipe = (id) => {
+  setSavedRecipes(prev =>
+    prev.filter(recipe => recipe.id !== id)
+  );
+};
 
   if (!user) {
   return (
@@ -104,8 +108,8 @@ const Profile = () => {
             <ArrowLeft size={24} strokeWidth={2.5} />
           </button>
           <h1 className="nav-page-title">
-            {showSettings ? "Settings" : isEditing ? "Edit Profile" : "My Profile"}
-          </h1>
+               {showSettings ? "Settings" : "My Profile"}
+                </h1>
           <button 
             className={`nav-action-btn ${showSettings ? 'active-state' : ''}`} 
             onClick={() => setShowSettings(!showSettings)}
@@ -116,86 +120,81 @@ const Profile = () => {
 
         <div className="scrollable-content">
           {!showSettings ? (
-            <div className="view-fade">
-              <section className="profile-hero-card">
-                <div className="profile-avatar-group">
-                  <div className="avatar-ring">
-                    <img src={user?.avatar} alt="User" />
-                  </div>
-                  <button className="camera-fab" onClick={() => fileInputRef.current.click()}>
-                    <Camera size={18} fill="white" color="white" />
-                  </button>
-                  <input type="file" ref={fileInputRef} hidden onChange={handleImageChange} accept="image/*" />
-                </div>
+  <div className="view-fade">
 
-                {isEditing ? (
-                  <div className="editing-form-container">
-                    <div className="input-group">
-                      <label>Full Name</label>
-                      <input 
-                        className="pro-input" 
-                        value={user?.name} 
-                        onChange={(e) => setUser({...user, name: e.target.value})} 
-                      />
-                    </div>
-                    <div className="input-group">
-                      <label>Email Address</label>
-                      <input 
-                        className="pro-input" 
-                        value={user?.email} 
-                        onChange={(e) => setUser({...user, email: e.target.value})} 
-                      />
-                    </div>
-                    <button className="primary-save-btn" onClick={() => setIsEditing(false)}>
-                      <Save size={18} /> Save Profile
-                    </button>
-                  </div>
-                ) : (
-                  <div className="user-text-center">
-                    <h2 className="user-display-name">{user?.name}</h2>
-                    <p className="user-display-email">{user?.email}</p>
-                    <div className="status-chip">
-                      <Calendar size={14} /> 
-                      <span>Joined {user?.memberSince}</span>
-                    </div>
-                  </div>
-                )}
-              </section>
+    {/* PROFILE CARD */}
+    <section className="profile-hero-card">
 
-              {!isEditing && (
-                <>
-                  <div className="action-button-grid">
-                    <button className="main-orange-btn" onClick={() => setIsEditing(true)}>
-                      Edit Profile
-                    </button>
-                    <button className="sq-share-btn" onClick={handleShare}>
-                      <Share2 size={22} />
-                    </button>
-                  </div>
+      <div className="profile-avatar-group">
+        <div className="avatar-ring">
+          <img src={user?.avatar} alt="User" />
+        </div>
 
-                  <section className="content-section">
-                    <div className="section-flex-header">
-                      <h3>Dietary Preferences</h3>
-                      {/* MODIFY text has been removed */}
-                    </div>
-                    <div className="chip-flex-wrap">
-                      {dietaryPrefs.map(pref => (
-                        <button 
-                          key={pref.id} 
-                          className={`modern-chip ${pref.active ? 'filled' : ''}`}
-                          onCli
-                          ck={() => setDietaryPrefs(dietaryPrefs.map(p => p.id === pref.id ? {...p, active: !p.active} : p))}
-                        >
-                          {pref.active && <Check size={16} strokeWidth={4} />}
-                          {pref.label}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                </>
-              )}
+        <button
+          className="camera-fab"
+          onClick={() => fileInputRef.current.click()}
+        >
+          <Camera size={18} fill="white" color="white" />
+        </button>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          hidden
+          onChange={handleImageChange}
+          accept="image/*"
+        />
+      </div>
+
+      <div className="user-text-center">
+        <h2 className="user-display-name">{user?.name}</h2>
+        <p className="user-display-email">{user?.email}</p>
+      </div>
+
+    </section>
+
+    {/* SHARE BUTTON */}
+    <div className="action-button-grid">
+      <button className="main-orange-btn" onClick={handleShare}>
+        Share Profile
+      </button>
+    </div>
+
+    {/* SAVED RECIPES */}
+    <section className="content-section">
+      <div className="section-flex-header">
+        <h3>Saved Recipes</h3>
+      </div>
+
+      {savedRecipes.length === 0 ? (
+        <p style={{ textAlign: "center", opacity: 0.6 }}>
+          No saved recipes
+        </p>
+      ) : (
+        <div className="saved-recipes-list">
+          {savedRecipes.map(recipe => (
+            <div key={recipe.id} className="recipe-card">
+
+              <div className="recipe-info">
+                <h4>{recipe.name}</h4>
+                <p>{recipe.description || "Tasty recipe"}</p>
+              </div>
+
+              <button
+                className="delete-btn"
+                onClick={() => handleDeleteRecipe(recipe.id)}
+              >
+                Delete
+              </button>
+
             </div>
-          ) : (
+          ))}
+        </div>
+      )}
+    </section>
+
+  </div>
+) : (
             <div className="settings-list-container view-fade">
               <div className="settings-group-card">
                 <div className="setting-tile">
