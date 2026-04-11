@@ -1,17 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
-function RecipeCard({ recipe,allRecipes,strictRecipes }) {
+function RecipeCard({ recipe, allRecipes, strictRecipes, onView }) {
   const navigate = useNavigate();
-
-  const handleViewRecipe = () => {
-    navigate("/recipe-details", {
-  state: {
-    recipe,
-    recipes: allRecipes || [],
-    strictRecipes:strictRecipes ?? null
-  }
-});
-  };
 
   return (
     <div style={styles.card}>
@@ -22,7 +12,10 @@ function RecipeCard({ recipe,allRecipes,strictRecipes }) {
       <div style={styles.content}>
         <div style={styles.row}>
           <div>
-            <h4 style={styles.title}>{recipe.recipe_name}</h4>
+            <h4 style={styles.title}>
+              {recipe.recipe_name}
+            </h4>
+
             <p style={styles.info}>
               {recipe.time} • {recipe.cuisine}
             </p>
@@ -30,9 +23,17 @@ function RecipeCard({ recipe,allRecipes,strictRecipes }) {
 
           <button
             style={styles.button}
-            onClick={handleViewRecipe}
-            onMouseEnter={(e) => (e.target.style.background = "#ff7a59")}
-            onMouseLeave={(e) => (e.target.style.background = "#f2f2f2")}
+            onClick={() => {
+              if (onView) {
+                onView(recipe);
+              } else {
+                navigate("/recipe-details", {
+                  state: {
+                    recipe
+                  }
+                });
+              }
+            }}
           >
             View Recipe
           </button>
@@ -41,7 +42,6 @@ function RecipeCard({ recipe,allRecipes,strictRecipes }) {
     </div>
   );
 }
-
 const styles = {
   card: {
     minWidth: "260px",

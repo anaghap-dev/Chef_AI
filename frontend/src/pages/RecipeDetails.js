@@ -1,27 +1,64 @@
 import React from "react";
-import { useEffect } from "react";
+import { useEffect,useState } from "react";
+import { supabase } from "./supabaseClient";
 import { useLocation, useNavigate } from "react-router-dom";
+import { normalizeRecipe } from "../utils/normalizeRecipe";
 
 function RecipeDetails() {
   const location = useLocation();
+  const [fullRecipe, setFullRecipe] = useState(null);
   const navigate = useNavigate();
-  const recipe = location.state?.recipe; 
-  const [isSaved, setIsSaved] = React.useState(false);
-  const [popupMessage, setPopupMessage] = React.useState("");
-  const [showPopup, setShowPopup] = React.useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
+  const normalizedRecipe = normalizeRecipe(
+  location.state?.recipe,
+  fullRecipe || {}
+);
+const recipeName = location.state?.recipe?.recipe_name;
 
+ useEffect(() => {
+  const fetchRecipe = async () => {
+    const recipeName = location.state?.recipe?.recipe_name;
+
+    if (!recipeName) return;
+
+    const { data, error } = await supabase
+      .from("recipes")
+      .select("*")
+      .eq("recipe_name", recipeName)
+      .single();
+
+    if (error) {
+      console.log(error.message);
+      return;
+    }
+
+    setFullRecipe(data);
+  };
+
+  fetchRecipe();
+}, [location.state?.recipe]);
+
+useEffect(() => {
+  const checkSaved = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !fullRecipe) return;
+
+    const { data, error } = await supabase
+      .from("saved_recipes")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("recipe_name", recipeName);
+
+    if (error) return console.log(error.message);
+
+    setIsSaved(data?.length > 0);
+  };
+
+  checkSaved();
+}, [recipeName,fullRecipe]);
   
-  useEffect(() => {
-    if (!recipe) return;
-
-    const saved = JSON.parse(localStorage.getItem("savedRecipes")) || [];
-
-    const exists = saved.some(
-      (r) => r.recipe_name === recipe.recipe_name
-    );
-
-    setIsSaved(exists); // ✅ FIX 2
-  }, [recipe]);
 
   // ✅ FIX 3: Separate useEffect (not nested)
   useEffect(() => {
@@ -34,62 +71,66 @@ function RecipeDetails() {
     return () => clearTimeout(timer);
   }, [showPopup]);
 
-  if (!recipe) {
-    return (
-      <div style={styles.page}>
-        <div style={styles.container}>
-          <h2 style={styles.errorTitle}>No recipe selected</h2>
-          <p style={styles.errorText}>
-            Please go back and select a recipe from the suggestions page.
-          </p>
-          <button
-            style={styles.backButton}
-            onClick={() => navigate("/")}
-          >
-            Go Back Home
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   const handleBackClick = () => {
-    navigate("/", {
-      state: {
-        recipes: location.state?.recipes || [],
-        strictRecipes: location.state?.strictRecipes || []
-      }
-    });
-  };
+  navigate("/", {
+    state: {
+      recipes: location.state?.recipes,
+      strictRecipes: location.state?.strictRecipes,
+      searchQuery: location.state?.searchQuery,
+      fromDetails: true
+    }
+  });
+};
 
-  const handleSaveRecipe = () => {
-    const user = localStorage.getItem("user");
+  const handleSaveRecipe = async () => {
+  console.log("CLICKED SAVE BUTTON");
 
-    if (!user) {
-      setPopupMessage("To save a recipe, please login/signup");
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    setPopupMessage("Please login to save recipes");
+    setShowPopup(true);
+    return;
+  }
+
+  try {
+    if (isSaved) {
+      const { error } = await supabase
+        .from("saved_recipes")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("recipe_name", recipeName);
+
+      if (error) throw error;
+
+      setIsSaved(false);
+      setPopupMessage("Removed from saved");
       setShowPopup(true);
       return;
     }
 
-    let saved = JSON.parse(localStorage.getItem("savedRecipes")) || [];
+    const { error } = await supabase
+      .from("saved_recipes")
+      .insert([
+        {
+          user_id: user.id,
+          recipe_name: normalizedRecipe.name
+        }
+      ]);
 
-    if (isSaved) {
-      saved = saved.filter(
-        (r) => r.recipe_name !== recipe.recipe_name
-      );
-      localStorage.setItem("savedRecipes", JSON.stringify(saved));
-      setIsSaved(false);
+    if (error) throw error;
 
-      setPopupMessage("Recipe removed from saved recipes.");
-      setShowPopup(true);
-    } else {
-      saved.push(recipe);
-      localStorage.setItem("savedRecipes", JSON.stringify(saved));
-      setIsSaved(true);
-      setPopupMessage("Recipe saved successfully!");
-      setShowPopup(true);
-    }
-  };
+    setIsSaved(true);
+    setPopupMessage("Recipe saved ❤️");
+    setShowPopup(true);
+
+  } catch (err) {
+    console.log("FULL ERROR:", err);
+          setPopupMessage(err.message);
+          setShowPopup(true);
+  }
+};
 
   return (
     <div style={styles.page}>
@@ -97,17 +138,17 @@ function RecipeDetails() {
         {/* RECIPE IMAGE */}
         <img
           src={
-            recipe.image ||
+            normalizeRecipe?.image ||
             "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
           }
-          alt={recipe.recipe_name || "Recipe"}
+          alt={normalizedRecipe.name || "Recipe"}
           style={styles.image}
         />
 
         <div style={styles.headerRow}>
            {/* MAIN HEADING */}
         <h1 style={styles.mainHeading}>
-          {recipe.recipe_name || "Recipe Name"}
+          {normalizedRecipe.name || "Recipe Name"}
         </h1>
           <button
             style={{
@@ -124,13 +165,13 @@ function RecipeDetails() {
 
         {/* SUBHEADING */}
         <h3 style={styles.subHeading}>
-          {recipe.final_recipe_name || recipe["Final recipe name"] || ""}
+          {normalizedRecipe.name || ""}
         </h3>
 
         {/* CUISINE */}
         <div style={styles.badgeRow}>
           <span style={styles.badge}>
-            Cuisine: {recipe.Cuisine || recipe.cuisine || "Unknown"}
+            Cuisine: {normalizedRecipe.cuisine || "Unknown"}
           </span>
         </div>
 
@@ -138,9 +179,7 @@ function RecipeDetails() {
         <section style={styles.section}>
           <h2 style={styles.sectionTitle}>Detailed Ingredients</h2>
           <p style={styles.sectionText}>
-            {recipe["Detailed_Ingredients"] ||
-              recipe.detailed_ingredients ||
-              recipe.detailedIngredients ||
+            { normalizedRecipe.detailedIngredients ||
               "No detailed ingredients available."}
           </p>
         </section>
@@ -149,8 +188,7 @@ function RecipeDetails() {
         <section style={styles.section}>
           <h2 style={styles.sectionTitle}>Instructions</h2>
           <p style={styles.sectionText}>
-            {recipe.Instructions ||
-              recipe.instructions ||
+            {normalizedRecipe.instructions ||
               "No instructions available."}
           </p>
         </section>
@@ -163,63 +201,63 @@ function RecipeDetails() {
             <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Calories</h4>
               <p style={styles.nutritionValue}>
-                {recipe["Calories (kcal)"] ?? recipe.calories ?? "N/A"}
+                { normalizedRecipe.calories ?? "N/A"}
               </p>
             </div>
 
              <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Carbohydrates</h4>
               <p style={styles.nutritionValue}>
-                {recipe["Carbohydrates g"] ?? recipe.carbohydrates ?? "N/A"}
+                { normalizedRecipe.carbs ?? "N/A"}
               </p>
             </div>
 
             <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Protein</h4>
               <p style={styles.nutritionValue}>
-                {recipe["Protein g"] ?? recipe.protein ?? "N/A"}
+                { normalizedRecipe.protein ?? "N/A"}
               </p>
             </div>
 
             <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Fats</h4>
               <p style={styles.nutritionValue}>
-                {recipe["Fats g"] ?? recipe.fats ?? "N/A"}
+                {normalizedRecipe.fats ?? "N/A"}
               </p>
             </div>
 
             <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Free Sugar</h4>
               <p style={styles.nutritionValue}>
-                {recipe["Free Sugar g"] ?? recipe.free_sugar ?? "N/A"}
+                { normalizedRecipe.sugar ?? "N/A"}
               </p>
             </div>
 
             <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Fibre</h4>
               <p style={styles.nutritionValue}>
-                {recipe["Fibre g"] ?? recipe.fibre ?? "N/A"}
+                {normalizedRecipe.fibre ?? "N/A"}
               </p>
             </div>
 
             <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Sodium</h4>
               <p style={styles.nutritionValue}>
-                {recipe["Sodium mg"] ?? recipe.sodium ?? "N/A"}
+                {normalizedRecipe.sodium ?? "N/A"}
               </p>
             </div>
 
             <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Calcium</h4>
               <p style={styles.nutritionValue}>
-                {recipe["Calcium mg"] ?? recipe.calcium ?? "N/A"}
+                { normalizedRecipe.calcium ?? "N/A"}
               </p>
             </div>
 
             <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Iron</h4>
               <p style={styles.nutritionValue}>
-                {recipe["Iron mg"] ?? recipe.iron ?? "N/A"}
+                {normalizedRecipe.iron ?? "N/A"}
               </p>
             </div>
           </div>

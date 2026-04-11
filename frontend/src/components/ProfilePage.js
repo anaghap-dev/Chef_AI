@@ -1,6 +1,7 @@
 import React, { useState, useRef ,useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../pages/supabaseClient';
+import RecipeCard from './RecipeCard';
 import './ProfilePage.css';
 import { 
   ArrowLeft, Settings,  
@@ -17,6 +18,12 @@ const Profile = () => {
   const [savedRecipes, setSavedRecipes] = useState([]);
 
   const fileInputRef = useRef(null);
+  const formattedRecipes = savedRecipes.map((r) => ({
+  recipe_name: r.recipe_name,
+  image: r.recipe_image,
+  time: "",
+  cuisine: ""
+}));
 
   useEffect(() => {
   const loadUser = async () => {
@@ -48,6 +55,29 @@ const Profile = () => {
   loadUser();
   
 }, [navigate]);
+
+
+    useEffect(() => {
+  const fetchSavedRecipes = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("saved_recipes")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("id", { ascending: false });
+
+    if (error) {
+      console.log("Fetch error:", error.message);
+    } else {
+      setSavedRecipes(data);
+    }
+  };
+
+  fetchSavedRecipes();
+}, []);
   
 
   const handleShare = async () => {
@@ -83,10 +113,22 @@ const Profile = () => {
     }
   };
 
-  const handleDeleteRecipe = (id) => {
-  setSavedRecipes(prev =>
-    prev.filter(recipe => recipe.id !== id)
-  );
+ const handleDeleteRecipe = async (recipeName) => {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  const { error } = await supabase
+    .from("saved_recipes")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("recipe_name", recipeName);
+
+  if (!error) {
+    setSavedRecipes(prev =>
+      prev.filter(r => r.recipe_name !== recipeName)
+    );
+  }
 };
 
   if (!user) {
@@ -172,23 +214,39 @@ const Profile = () => {
         </p>
       ) : (
         <div className="saved-recipes-list">
-          {savedRecipes.map(recipe => (
-            <div key={recipe.id} className="recipe-card">
+  {formattedRecipes.map((recipe) => (
+    <div key={recipe.recipe_name} style={{ position: "relative" }}>
 
-              <div className="recipe-info">
-                <h4>{recipe.name}</h4>
-                <p>{recipe.description || "Tasty recipe"}</p>
-              </div>
+      {/* Recipe Card (same as home page) */}
+      <RecipeCard
+        recipe={recipe}
+         onView={(r) =>
+    navigate("/recipe-details", {
+      state: { recipe: r }
+    })
+  }
+      />
 
-              <button
-                className="delete-btn"
-                onClick={() => handleDeleteRecipe(recipe.id)}
-              >
-                Delete
-              </button>
+      {/* DELETE BUTTON OVERLAY */}
+      <button
+        onClick={() => handleDeleteRecipe(recipe.recipe_name)}
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          background: "red",
+          color: "white",
+          border: "none",
+          padding: "6px 10px",
+          borderRadius: "8px",
+          cursor: "pointer"
+        }}
+      >
+        Delete
+      </button>
 
-            </div>
-          ))}
+    </div>
+  ))}
         </div>
       )}
     </section>
