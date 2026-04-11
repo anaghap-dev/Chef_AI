@@ -13,25 +13,39 @@ const Profile = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const navigate = useNavigate();
-  const [user, setUser] = useState({
-    name: 'Alex Chefson',
-    email: 'alex.chefson@chefai.app',
-    memberSince: 'Oct 2023',
-    avatar: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400'
-  });
+  const [user, setUser] = useState(null);
 
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-  const checkUser = async () => {
-    const { data } = await supabase.auth.getUser();
+  const loadUser = async () => {
+    const { data, error } = await supabase.auth.getUser();
+
+     if (error) {
+      console.error("Error fetching user:", error.message);
+      navigate("/login");
+      return;
+    }
 
     if (!data.user) {
       navigate("/login");
+      return;
     }
+
+    const supaUser = data.user;
+
+    setUser({
+      name: supaUser.user_metadata?.username || "User",
+      email: supaUser.email,
+      memberSince: new Date(supaUser.created_at).toLocaleDateString(),
+      avatar:
+        supaUser.user_metadata?.avatar ||
+        "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400"
+    });
   };
 
-  checkUser();
+  loadUser();
+  
 }, [navigate]);
   
 
@@ -71,6 +85,16 @@ const Profile = () => {
     { id: 4, label: 'Low Carb', active: false },
   ]);
 
+  if (!user) {
+  return (
+    <div className="app-viewport">
+      <p style={{ textAlign: "center", marginTop: "50px" }}>
+        Loading profile...
+      </p>
+    </div>
+  );
+}
+
   return (
     <div className={`app-viewport ${darkMode ? 'dark' : 'light'}`}>
       <div className="main-phone-wrapper">
@@ -96,7 +120,7 @@ const Profile = () => {
               <section className="profile-hero-card">
                 <div className="profile-avatar-group">
                   <div className="avatar-ring">
-                    <img src={user.avatar} alt="User" />
+                    <img src={user?.avatar} alt="User" />
                   </div>
                   <button className="camera-fab" onClick={() => fileInputRef.current.click()}>
                     <Camera size={18} fill="white" color="white" />
@@ -110,7 +134,7 @@ const Profile = () => {
                       <label>Full Name</label>
                       <input 
                         className="pro-input" 
-                        value={user.name} 
+                        value={user?.name} 
                         onChange={(e) => setUser({...user, name: e.target.value})} 
                       />
                     </div>
@@ -118,7 +142,7 @@ const Profile = () => {
                       <label>Email Address</label>
                       <input 
                         className="pro-input" 
-                        value={user.email} 
+                        value={user?.email} 
                         onChange={(e) => setUser({...user, email: e.target.value})} 
                       />
                     </div>
@@ -128,11 +152,11 @@ const Profile = () => {
                   </div>
                 ) : (
                   <div className="user-text-center">
-                    <h2 className="user-display-name">{user.name}</h2>
-                    <p className="user-display-email">{user.email}</p>
+                    <h2 className="user-display-name">{user?.name}</h2>
+                    <p className="user-display-email">{user?.email}</p>
                     <div className="status-chip">
                       <Calendar size={14} /> 
-                      <span>Joined {user.memberSince}</span>
+                      <span>Joined {user?.memberSince}</span>
                     </div>
                   </div>
                 )}
