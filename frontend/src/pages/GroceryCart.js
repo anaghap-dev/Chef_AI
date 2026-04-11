@@ -19,7 +19,6 @@ const location = useLocation();
 const navigate = useNavigate();
 
 const fromRecipe = location.state?.fromRecipe;
-const recipe = location.state?.recipe;
 
 React.useEffect(() => {
   localStorage.setItem("groceryItems", JSON.stringify(items));
