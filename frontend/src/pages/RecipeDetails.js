@@ -1,38 +1,35 @@
 import React from "react";
-import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 function RecipeDetails() {
   const location = useLocation();
   const navigate = useNavigate();
   const recipe = location.state?.recipe; 
-  const [isSaved, setIsSaved] = React.useState(false);
-  const [popupMessage, setPopupMessage] = React.useState("");
+
   const [showPopup, setShowPopup] = React.useState(false);
+  const [isFavorite, setIsFavorite] = React.useState(false);
 
-  // ✅ FIX 1: Proper useEffect
-  useEffect(() => {
-    if (!recipe) return;
+const handleAddMissing = (e) => {
+  if (e.target.checked) {
+    const newItems = [
+      { name: "Onion", qty: "2" },
+      { name: "Tomato", qty: "3" }
+    ];
 
-    const saved = JSON.parse(localStorage.getItem("savedRecipes")) || [];
+    const existing = JSON.parse(localStorage.getItem("groceryItems")) || [];
 
-    const exists = saved.some(
-      (r) => r.recipe_name === recipe.recipe_name
+    localStorage.setItem(
+      "groceryItems",
+      JSON.stringify([...existing, ...newItems])
     );
 
-    setIsSaved(exists); // ✅ FIX 2
-  }, [recipe]);
+    setShowPopup(true);
+  }
+};
 
-  // ✅ FIX 3: Separate useEffect (not nested)
-  useEffect(() => {
-    if (!showPopup) return;
-
-    const timer = setTimeout(() => {
-      setShowPopup(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [showPopup]);
+const handleSaveFavorite = () => {
+  setIsFavorite(prev => !prev);
+};
 
   if (!recipe) {
     return (
@@ -54,42 +51,13 @@ function RecipeDetails() {
   }
 
   const handleBackClick = () => {
-    navigate("/", {
-      state: {
-        recipes: location.state?.recipes || [],
-        strictRecipes: location.state?.strictRecipes || []
-      }
-    });
-  };
-
-  const handleSaveRecipe = () => {
-    const user = localStorage.getItem("user");
-
-    if (!user) {
-      setPopupMessage("To save a recipe, please login/signup");
-      setShowPopup(true);
-      return;
+  navigate("/", {
+    state: {
+       recipes: location.state?.recipes || [],
+      strictRecipes: location.state?.strictRecipes || []
     }
-
-    let saved = JSON.parse(localStorage.getItem("savedRecipes")) || [];
-
-    if (isSaved) {
-      saved = saved.filter(
-        (r) => r.recipe_name !== recipe.recipe_name
-      );
-      localStorage.setItem("savedRecipes", JSON.stringify(saved));
-      setIsSaved(false);
-
-      setPopupMessage("Recipe removed from saved recipes.");
-      setShowPopup(true);
-    } else {
-      saved.push(recipe);
-      localStorage.setItem("savedRecipes", JSON.stringify(saved));
-      setIsSaved(true);
-      setPopupMessage("Recipe saved successfully!");
-      setShowPopup(true);
-    }
-  };
+  });
+};
 
   return (
     <div style={styles.page}>
@@ -104,23 +72,16 @@ function RecipeDetails() {
           style={styles.image}
         />
 
-        <div style={styles.headerRow}>
-           {/* MAIN HEADING */}
-        <h1 style={styles.mainHeading}>
-          {recipe.recipe_name || "Recipe Name"}
-        </h1>
-          <button
-            style={{
-              ...styles.saveButton,
-              backgroundColor: isSaved ? "#ef4444" : "#fa1515",
-              color: isSaved ? "#fff" : "#111"
-            }}
-            onClick={handleSaveRecipe}
-          >
-            {isSaved ? "❤️ Saved" : "Save Recipe"}
-          </button>
-        </div>
+        {/* MAIN HEADING */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+  <h1 style={styles.mainHeading}>
+    {recipe.recipe_name || "Recipe Name"}
+  </h1>
 
+  <span onClick={handleSaveFavorite} style={{ fontSize: "26px", cursor: "pointer" }}>
+    {isFavorite ? "❤️" : "🤍"}
+  </span>
+</div>
 
         {/* SUBHEADING */}
         <h3 style={styles.subHeading}>
@@ -145,6 +106,11 @@ function RecipeDetails() {
           </p>
         </section>
 
+        <label style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "10px",marginBottom: "20px" }}>
+  <input type="checkbox" onChange={handleAddMissing} />
+  Add missing ingredients to grocery cart
+</label>
+
         {/* INSTRUCTIONS */}
         <section style={styles.section}>
           <h2 style={styles.sectionTitle}>Instructions</h2>
@@ -167,7 +133,7 @@ function RecipeDetails() {
               </p>
             </div>
 
-             <div style={styles.nutritionCard}>
+            <div style={styles.nutritionCard}>
               <h4 style={styles.nutritionTitle}>Carbohydrates</h4>
               <p style={styles.nutritionValue}>
                 {recipe["Carbohydrates g"] ?? recipe.carbohydrates ?? "N/A"}
@@ -226,28 +192,47 @@ function RecipeDetails() {
         </section>
 
         <button
+  style={{
+    marginTop: "15px",
+    marginRight: "10px",
+    padding: "12px 18px",
+    border: "none",
+    borderRadius: "12px",
+    backgroundColor: "#f97316",
+    color: "#fff",
+    fontSize: "15px",
+    fontWeight: "600",
+    cursor: "pointer"
+  }}
+  onClick={() => navigate("/grocerycart",{
+    state: {fromRecipe:true,recipe}
+  })}
+>
+  🛒 View Grocery Cart
+</button>
+        <button
           style={styles.backButton}
           onClick={handleBackClick}
         >
           ← Back to Home Page
         </button>
-      </div>
+        {showPopup && (
+          <div style={styles.overlay}>
+            <div style={styles.popup}>
+              <p style={styles.popupText}>
+                Missing ingredients added to grocery cart!
+              </p>
 
-      {/* ✅ FIX 4: popup inside main return */}
-      {showPopup && (
-        <div style={styles.overlay}>
-          <div style={styles.popup}>
-            <p style={styles.popupText}>{popupMessage}</p>
-
-            <button
-              style={styles.popupButton}
-              onClick={() => setShowPopup(false)}
-            >
-              OK
-            </button>
+              <button
+                style={styles.popupButton}
+                onClick={() => setShowPopup(false)}
+              >
+                OK
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -359,63 +344,43 @@ const styles = {
     color: "#6b7280",
     marginBottom: "20px"
   },
-  saveContainer: {
-    display: "flex",
-    justifyContent: "flex-end",
-    marginBottom: "10px"
-  },
-  saveButton: {
-    padding: "10px 16px",
-    borderRadius: "20px",
-    border: "none",
-    backgroundColor: "#facc15",
-    color: "#111",
-    fontWeight: "600",
-    cursor: "pointer",
-    transition: "0.3s",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.15)"
-  },
   overlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 999
-  },
-  popup: {
-    backgroundColor: "#fff",
-    padding: "25px 30px",
-    borderRadius: "15px",
-    textAlign: "center",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-    maxWidth: "300px"
-  },
-  popupText: {
-    fontSize: "16px",
-    marginBottom: "20px",
-    color: "#111"
-  },
-  popupButton: {
-    padding: "10px 18px",
-    borderRadius: "10px",
-    border: "none",
-    backgroundColor: "#111827",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: "600"
-  },
-  headerRow: {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  backgroundColor: "rgba(0,0,0,0.5)",
   display: "flex",
-  justifyContent: "space-between",
+  justifyContent: "center",
   alignItems: "center",
-  gap: "10px",
-  marginBottom: "10px"
+  zIndex: 999
 },
+
+popup: {
+  backgroundColor: "#fff",
+  padding: "25px 30px",
+  borderRadius: "15px",
+  textAlign: "center",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+  maxWidth: "300px"
+},
+
+popupText: {
+  fontSize: "16px",
+  marginBottom: "20px",
+  color: "#111"
+},
+
+popupButton: {
+  padding: "10px 18px",
+  borderRadius: "10px",
+  border: "none",
+  backgroundColor: "#111827",
+  color: "#fff",
+  cursor: "pointer",
+  fontWeight: "600"
+}
 };
 
 export default RecipeDetails;

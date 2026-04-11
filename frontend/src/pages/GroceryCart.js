@@ -3,19 +3,27 @@ import { Link } from "react-router-dom";
 import jsPDF from "jspdf"; // ✅ added
 import "./GroceryCart.css";
 import logo from "../assets/logo.png";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function GroceryCart() {
 
-const [items, setItems] = useState([
-{ name: "Fresh Spinach", qty: "200g" },
-{ name: "Heirloom Carrots", qty: "4 units" },
-{ name: "Chicken Thighs", qty: "500g" },
-{ name: "Extra Virgin Olive Oil", qty: "1 bottle" },
-{ name: "Greek Yogurt", qty: "500g" }
-]);
+const [items, setItems] = useState(() => {
+  const saved = localStorage.getItem("groceryItems");
+  return saved ? JSON.parse(saved) : [];
+});
 
 const [newItem, setNewItem] = useState("");
 const [newQty, setNewQty] = useState("");
+
+const location = useLocation();
+const navigate = useNavigate();
+
+const fromRecipe = location.state?.fromRecipe;
+const recipe = location.state?.recipe;
+
+React.useEffect(() => {
+  localStorage.setItem("groceryItems", JSON.stringify(items));
+}, [items]);
 
 const tips = [
 "Buying seasonal vegetables saves money",
@@ -80,9 +88,18 @@ Chef<span>AI</span>
 </h2>
 </div>
 
-<Link to="/" className="home-btn">
-Home
-</Link>
+{fromRecipe ? (
+  <button
+    className="home-btn"
+    onClick={() => navigate(-1)}
+  >
+    ← Return to Recipe
+  </button>
+) : (
+  <Link to="/" className="home-btn">
+    Home
+  </Link>
+)}
 
 </div>
 
