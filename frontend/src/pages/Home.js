@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import SearchBar from "../components/SearchBar";
@@ -96,27 +97,80 @@ function Home() {
   const [allergy, setAllergy] = useState("");
   const [strictRecipes, setStrictRecipes] = useState(null); // 🔥 NEW STATE
   const location = useLocation();
-
+  
   const [recipes, setRecipes] = useState(defaultRecipes);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState(null);
 
+  
+ // =========================
+// LOAD SAVED STATE (FIXED)
+// =========================
+useEffect(() => {
+  const state = location.state;
+
   // =========================
-  // LOAD STATE
+  // 1. BACK NAVIGATION RESTORE FROM DETAILS
   // =========================
-  useEffect(() => {
-  // ✅ PRIORITY: if coming from navigation → skip localStorage
-  if (location.state) return;
+  if (state?.fromDetails) {
+    const hasRecipeState = state && typeof state === "object" && (
+      Object.prototype.hasOwnProperty.call(state, "recipes") ||
+      Object.prototype.hasOwnProperty.call(state, "strictRecipes")
+    );
 
-  const savedState = localStorage.getItem("recipeSearchState");
+    if (hasRecipeState) {
+      setRecipes(
+        Object.prototype.hasOwnProperty.call(state, "recipes")
+          ? state.recipes
+          : defaultRecipes
+      );
+      setStrictRecipes(
+        Object.prototype.hasOwnProperty.call(state, "strictRecipes")
+          ? state.strictRecipes
+          : null
+      );
 
-  if (savedState) {
-    try {
-      const parsed = JSON.parse(savedState);
+      setIngredients(
+        Object.prototype.hasOwnProperty.call(state, "ingredients")
+          ? state.ingredients
+          : ""
+      );
+      setSelectedCuisine(
+        Object.prototype.hasOwnProperty.call(state, "selectedCuisine")
+          ? state.selectedCuisine
+          : ""
+      );
+      setSelectedCategory(
+        Object.prototype.hasOwnProperty.call(state, "selectedCategory")
+          ? state.selectedCategory
+          : ""
+      );
+      setSelectedCookingTime(
+        Object.prototype.hasOwnProperty.call(state, "selectedCookingTime")
+          ? state.selectedCookingTime
+          : ""
+      );
+      setAllergy(
+        Object.prototype.hasOwnProperty.call(state, "allergy")
+          ? state.allergy
+          : ""
+      );
+      setMessage(
+        Object.prototype.hasOwnProperty.call(state, "message")
+          ? state.message
+          : ""
+      );
+      return;
+    }
 
-      if (parsed.recipes && parsed.recipes.length > 0) {
-        setRecipes(parsed.recipes);
+    const saved = localStorage.getItem("recipeSearchState");
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+
+        setRecipes(parsed.recipes || defaultRecipes);
         setStrictRecipes(parsed.strictRecipes || null);
 
         setIngredients(parsed.ingredients || "");
@@ -125,60 +179,71 @@ function Home() {
         setSelectedCookingTime(parsed.selectedCookingTime || "");
         setAllergy(parsed.allergy || "");
         setMessage(parsed.message || "");
-        return;
+      } catch (e) {
+        console.error(e);
       }
+    }
+    return;
+  }
+
+  // =========================
+  // 2. NORMAL LOCAL STORAGE LOAD
+  // =========================
+  const savedState = localStorage.getItem("recipeSearchState");
+
+  if (savedState) {
+    try {
+      const parsed = JSON.parse(savedState);
+
+      setRecipes(parsed.recipes?.length ? parsed.recipes : defaultRecipes);
+      setStrictRecipes(parsed.strictRecipes || null);
+
+      setIngredients(parsed.ingredients || "");
+      setSelectedCuisine(parsed.selectedCuisine || "");
+      setSelectedCategory(parsed.selectedCategory || "");
+      setSelectedCookingTime(parsed.selectedCookingTime || "");
+      setAllergy(parsed.allergy || "");
+      setMessage(parsed.message || "");
+      return;
     } catch (e) {
-      console.error("Error parsing saved state", e);
+      console.error(e);
     }
   }
 
+  // =========================
+  // 3. DEFAULT
+  // =========================
   setRecipes(defaultRecipes);
-}, [location.state]);
-
-  // =========================
-  // BACK NAVIGATION FIX
-  // =========================
-  useEffect(() => {
-  if (location.state) {
-    if (location.state.recipes) {
-      setRecipes(location.state.recipes);
-    }
-
-    if ("strictRecipes" in location.state) {
-      setStrictRecipes(location.state.strictRecipes);
-    }
-
-    // ✅ VERY IMPORTANT (prevents swap bug)
-    window.history.replaceState({}, document.title);
-  }
+  setStrictRecipes(null);
 }, [location]);
 
-  // =========================
-  // SAVE STATE
-  // =========================
-  useEffect(() => {
-    const stateToSave = {
-      ingredients,
-      selectedCuisine,
-      selectedCategory,
-      selectedCookingTime,
-      allergy,
-      recipes,
-      strictRecipes, // 🔥 save strict
-      message
-    };
+// =========================
+// SAVE STATE (FIXED)
+// =========================
 
-    localStorage.setItem("recipeSearchState", JSON.stringify(stateToSave));
-  }, [
+useEffect(() => {
+  const stateToSave = {
+    recipes,
+    strictRecipes,
     ingredients,
     selectedCuisine,
     selectedCategory,
     selectedCookingTime,
     allergy,
-    recipes,
-    strictRecipes,
     message
-  ]);
+  };
+
+  localStorage.setItem("recipeSearchState", JSON.stringify(stateToSave));
+}, [
+  recipes,
+  strictRecipes,
+  ingredients,
+  selectedCuisine,
+  selectedCategory,
+  selectedCookingTime,
+  allergy,
+  message
+]);
 
   // =========================
   // FETCH RECIPES
@@ -214,6 +279,9 @@ function Home() {
       );
 
       const data = await response.json();
+      let transformed = [];
+     
+      
 
      // =========================
 // 🔥 STRICT RECIPE FIRST
@@ -223,21 +291,22 @@ let strict = null;
 if (data.strict_recipes && data.strict_recipes.length > 0) {
   strict = {
     ...data.strict_recipes[0],
-    time: data.strict_recipes[0].CookingTime ? `${data.strict_recipes[0].CookingTime} mins` : "N/A",
-    cuisine: data.strict_recipes[0].Cuisine ||  "Unknown",
+    time: data.strict_recipes[0].CookingTime
+      ? `${data.strict_recipes[0].CookingTime} mins`
+      : "N/A",
+    cuisine: data.strict_recipes[0].Cuisine || "Unknown",
     image:
       "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
   };
+
   setStrictRecipes(strict);
 } else {
   setStrictRecipes(null);
 }
 
-// =========================
-// NORMAL RECIPES (FILTERED)
-// =========================
+
 if (data.recipes && data.recipes.length > 0) {
-  const transformed = data.recipes
+  transformed = data.recipes
     .map((r) => ({
       ...r,
       time: r.CookingTime ? `${r.CookingTime} mins` : "N/A",
@@ -245,16 +314,27 @@ if (data.recipes && data.recipes.length > 0) {
       image:
         "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
     }))
-    // 🔥 REMOVE STRICT FROM LIST
+   
     .filter((r) => !strict || r.recipe_name !== strict.recipe_name);
 
   setRecipes(transformed);
 } else {
   setRecipes([]);
 }
-     
+
 
       setMessage("Found 5 Recipes");
+      localStorage.setItem("recipeSearchState", JSON.stringify({
+  recipes: transformed,
+  strictRecipes: strict,
+  ingredients,
+  selectedCuisine,
+  selectedCategory,
+  selectedCookingTime,
+  allergy,
+  message: "Found 5 Recipes"
+}));
+      
     } catch (err) {
       console.error(err);
       setError("Backend error");
@@ -288,11 +368,11 @@ if (data.recipes && data.recipes.length > 0) {
         <select value={selectedCookingTime} onChange={(e) => setSelectedCookingTime(e.target.value)} 
         style={styles.input} >
            <option value="">Cooking Time</option> 
-           <option value="1-30">1-30 mins</option> 
-           <option value="30-80">30-80 mins</option> 
-           <option value="30-80">80-150 mins</option> 
-           <option value="30-80">150-200 mins</option> 
-           <option value="30-80">200 mins+</option> 
+          <option value="1-30">1-30 mins</option>
+          <option value="30-80">30-80 mins</option>
+          <option value="80-150">80-150 mins</option>
+          <option value="150-200">150-200 mins</option>
+          <option value="200+">200 mins+</option>
         </select>
 
         <select
@@ -351,7 +431,7 @@ if (data.recipes && data.recipes.length > 0) {
           <RecipeCard
             recipe={strictRecipes}
             strictRecipes={strictRecipes}
-            allRecipes={recipes}
+            recipes={recipes}
           />
         </div>
       )}

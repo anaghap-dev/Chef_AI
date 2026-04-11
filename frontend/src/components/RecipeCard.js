@@ -1,8 +1,18 @@
 import { useNavigate } from "react-router-dom";
 
-function RecipeCard({ recipe, allRecipes, strictRecipes, onView }) {
-  const navigate = useNavigate();
+function RecipeCard({recipe,
+  onView,
+  recipes,
+  strictRecipes,
+  ingredients,
+  selectedCategory,
+  selectedCuisine,
+  selectedCookingTime,
+  allergy,
+  message }) {
+    const navigate = useNavigate();
 
+    
   return (
     <div style={styles.card}>
       <div style={styles.imageContainer}>
@@ -29,7 +39,15 @@ function RecipeCard({ recipe, allRecipes, strictRecipes, onView }) {
               } else {
                 navigate("/recipe-details", {
                   state: {
-                    recipe
+                    recipe,
+                     recipes,
+                  strictRecipes,
+                         ingredients,
+                     selectedCategory,
+                         selectedCuisine,
+                 selectedCookingTime,
+                         allergy,
+                     message
                   }
                 });
               }

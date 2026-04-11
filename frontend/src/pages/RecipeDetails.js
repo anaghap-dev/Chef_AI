@@ -72,16 +72,39 @@ useEffect(() => {
   }, [showPopup]);
 
 
+
   const handleBackClick = () => {
-  navigate("/", {
-    state: {
-      recipes: location.state?.recipes,
-      strictRecipes: location.state?.strictRecipes,
-      searchQuery: location.state?.searchQuery,
-      fromDetails: true
+    const backState = { fromDetails: true };
+
+    if (location.state) {
+      if (Object.prototype.hasOwnProperty.call(location.state, "recipes")) {
+        backState.recipes = location.state.recipes;
+      }
+      if (Object.prototype.hasOwnProperty.call(location.state, "strictRecipes")) {
+        backState.strictRecipes = location.state.strictRecipes;
+      }
+      if (Object.prototype.hasOwnProperty.call(location.state, "ingredients")) {
+        backState.ingredients = location.state.ingredients;
+      }
+      if (Object.prototype.hasOwnProperty.call(location.state, "selectedCuisine")) {
+        backState.selectedCuisine = location.state.selectedCuisine;
+      }
+      if (Object.prototype.hasOwnProperty.call(location.state, "selectedCategory")) {
+        backState.selectedCategory = location.state.selectedCategory;
+      }
+      if (Object.prototype.hasOwnProperty.call(location.state, "selectedCookingTime")) {
+        backState.selectedCookingTime = location.state.selectedCookingTime;
+      }
+      if (Object.prototype.hasOwnProperty.call(location.state, "allergy")) {
+        backState.allergy = location.state.allergy;
+      }
+      if (Object.prototype.hasOwnProperty.call(location.state, "message")) {
+        backState.message = location.state.message;
+      }
     }
-  });
-};
+
+    navigate("/", { state: backState });
+  };
 
   const handleSaveRecipe = async () => {
   console.log("CLICKED SAVE BUTTON");
