@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { MdKeyboardVoice } from "react-icons/md";
 import { FiCamera, FiSearch } from "react-icons/fi";
 
 function SearchBar({ ingredients, setIngredients }) {
   const [isListening, setIsListening] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const fileInputRef = useRef(null);
 
   const startVoiceInput = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -30,6 +32,37 @@ function SearchBar({ ingredients, setIngredients }) {
     recognition.start();
   };
 
+  const handleCameraClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsCapturing(true);
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await fetch("http://localhost:5000/image-input", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.ingredients && data.ingredients.length > 0) {
+        setIngredients(data.ingredients.join(", "));
+      } else {
+        alert("Could not detect any ingredients. Try a clearer photo.");
+      }
+    } catch (err) {
+      alert("Failed to process image. Make sure the backend is running.");
+    } finally {
+      setIsCapturing(false);
+      e.target.value = "";
+    }
+  };
+
   return (
     <div style={styles.container}>
 
@@ -51,7 +84,21 @@ function SearchBar({ ingredients, setIngredients }) {
           style={{ ...styles.icon, color: isListening ? "#e53e3e" : "#555" }}
           title={isListening ? "Listening..." : "Search by voice"}
         />
-        <FiCamera size={20} style={styles.icon}/>
+
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={handleImageUpload}
+        />
+        <FiCamera
+          size={20}
+          onClick={handleCameraClick}
+          style={{ ...styles.icon, color: isCapturing ? "#e53e3e" : "#555" }}
+          title={isCapturing ? "Detecting ingredients..." : "Search by photo"}
+        />
 
       </div>
 
