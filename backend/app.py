@@ -2,6 +2,9 @@ from flask import Flask
 from flask_cors import CORS
 from routes.text_routes import text_routes
 from routes.image_routes import image_bp
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
