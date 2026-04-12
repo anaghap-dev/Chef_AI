@@ -27,6 +27,48 @@ model_loaded = False
 # =========================
 # HELPERS
 # =========================
+
+# =========================
+# INGREDIENT NORMALIZATION MAP
+# =========================
+ingredient_map = {
+    "cloves garlic": "garlic",
+    "garlic paste": "garlic",
+    "ginger garlic paste": "ginger garlic",
+
+    "spring onion": "onion",
+    "spring onion greens": "onion",
+    "pearl onion": "onion",
+    "onion paste": "onion",
+
+    "green chillies": "chilli",
+    "dry red chilli": "chilli",
+    "red chilli powder": "chilli",
+
+    "coriander leaves": "coriander",
+    "coriander seeds": "coriander",
+    "coriander powder": "coriander",
+    "coriander dhania leaves": "coriander",
+
+    "cumin seeds": "cumin",
+    "cumin powder": "cumin",
+
+    "paneer cubes": "paneer",
+    "chicken breasts": "chicken",
+
+    "basmati rice": "rice",
+    "idli rice": "rice",
+
+    "hung curd": "curd",
+    "yogurt": "curd",
+
+    "green bell pepper": "capsicum",
+    "red bell pepper": "capsicum",
+
+    "spinach leaves": "spinach",
+    "potato aloo": "potato"
+}
+
 def safe_str(value):
     """Convert any value safely to string."""
     if pd.isna(value):
@@ -43,8 +85,16 @@ def clean_text(text):
 
 
 def clean_ingredients(text):
-    """Alias for ingredient cleaning."""
-    return clean_text(text)
+    text = clean_text(text)
+
+    # Sort keys by length (longest first)
+    sorted_keys = sorted(ingredient_map.keys(), key=len, reverse=True)
+
+    for key in sorted_keys:
+        if key in text:
+            text = text.replace(key, ingredient_map[key])
+
+    return text
 
 
 def get_column_name(possible_names):
