@@ -31,6 +31,7 @@ backend/data/recipes.csv
 
 # environment secrets
 backend/.env
+backend/.env.example
 
 # system files
 .DS_Store
