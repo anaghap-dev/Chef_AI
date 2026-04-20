@@ -1,244 +1,202 @@
-import pandas as pd
-from modules.recipe_matcher_prod import df, get_ingredient_tokens, safe_str
+import json
+import os
+import re
+import google.generativeai as genai
 
-# Allowed pantry items
-BASIC_INGREDIENTS = {
-    "salt", "sugar", "oil", "water", "pepper",
-    "spices", "butter", "ghee", "garlic", "ginger"
-}
+# ==========================
+# GOOGLE GENAI CLIENT
+# ==========================
+genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
-
-# =========================
-# AI FALLBACK GENERATOR
-# =========================
-def generate_ai_recipe(user_tokens):
-    """
-    Generate a smart recipe based on ingredient types.
-    """
-
-    tokens = set(user_tokens)
-    ingredients_list = list(tokens)
-
-    # -------------------------
-    # CATEGORY DETECTION
-    # -------------------------
-    has_chicken = "chicken" in tokens
-    has_egg = "egg" in tokens or "eggs" in tokens
-    has_beef = "beef" in tokens
-    has_rice = "rice" in tokens
-    has_bread = "bread" in tokens
-    has_veg = any(x in tokens for x in ["onion", "tomato", "carrot", "beans", "capsicum"])
-
-    # -------------------------
-    # CHICKEN RECIPES
-    # -------------------------
-    if has_chicken:
-        title = "Chicken Fry"
-        final_title = "AI Generated Spicy Chicken Fry"
-
-        instructions = [
-            "1. Clean and cut chicken into pieces.",
-            "2. Marinate with salt, pepper, spices, and a little oil.",
-            "3. Heat oil in a pan.",
-            "4. Add garlic and ginger if available.",
-            "5. Add chicken and cook on medium flame.",
-            "6. Stir occasionally until chicken is fully cooked.",
-            "7. Roast slightly for crispy texture.",
-            "8. Serve hot."
-        ]
-
-    # -------------------------
-    # EGG RECIPES
-    # -------------------------
-    elif has_egg and has_bread:
-        title = "Egg Sandwich"
-        final_title = "AI Egg Bread Sandwich"
-
-        instructions = [
-            "1. Boil or fry the eggs.",
-            "2. Mash eggs with salt and pepper.",
-            "3. Toast bread slices.",
-            "4. Spread egg mixture between bread.",
-            "5. Optionally add vegetables or sauce.",
-            "6. Serve warm."
-        ]
-
-    elif has_egg:
-        title = "Masala Omelette"
-        final_title = "AI Spiced Egg Omelette"
-
-        instructions = [
-            "1. Beat eggs in a bowl.",
-            "2. Add chopped onion, chili, and salt.",
-            "3. Heat oil in a pan.",
-            "4. Pour egg mixture.",
-            "5. Cook both sides until golden.",
-            "6. Serve hot."
-        ]
-
-    # -------------------------
-    # BEEF RECIPES
-    # -------------------------
-    elif has_beef:
-        title = "Beef Steak"
-        final_title = "AI Pan-Seared Beef Steak"
-
-        instructions = [
-            "1. Season beef with salt and pepper.",
-            "2. Heat a pan with oil or butter.",
-            "3. Place beef and cook on high heat.",
-            "4. Flip and cook to desired doneness.",
-            "5. Rest for a few minutes.",
-            "6. Slice and serve."
-        ]
-
-    # -------------------------
-    # RICE RECIPES
-    # -------------------------
-    elif has_rice:
-        title = "Fried Rice"
-        final_title = "AI Quick Fried Rice"
-
-        instructions = [
-            "1. Cook rice and let it cool.",
-            "2. Heat oil in a pan.",
-            "3. Add garlic and vegetables if available.",
-            "4. Add rice and stir well.",
-            "5. Add salt, pepper, and sauces.",
-            "6. Mix and cook for 5 minutes.",
-            "7. Serve hot."
-        ]
-
-    # -------------------------
-    # VEGETABLE DISH
-    # -------------------------
-    elif has_veg:
-        title = "Veg Stir Fry"
-        final_title = "AI Mixed Vegetable Stir Fry"
-
-        instructions = [
-            "1. Chop all vegetables.",
-            "2. Heat oil in a pan.",
-            "3. Add garlic and sauté.",
-            "4. Add vegetables and stir fry.",
-            "5. Add salt and spices.",
-            "6. Cook until slightly crunchy.",
-            "7. Serve hot."
-        ]
-
-    # -------------------------
-    # DEFAULT FALLBACK
-    # -------------------------
-    else:
-        title = "Custom Ingredient Dish"
-        final_title = "AI Generated Mixed Ingredient Recipe"
-
-        instructions = [
-            "1. Prepare all ingredients.",
-            "2. Heat oil in a pan.",
-            "3. Add base spices if available.",
-            f"4. Add {', '.join(ingredients_list)}.",
-            "5. Cook until well combined.",
-            "6. Season to taste.",
-            "7. Serve hot."
-        ]
-
-    # -------------------------
-    # FINAL OBJECT
-    # -------------------------
-    return {
-        "rank": 1,
-        "recipe_name": title,
-        "final_recipe_name": final_title,
-        "ingredients": ", ".join(ingredients_list),
-        "Instructions": "\n".join(instructions),
-        "Detailed_Ingredients": ", ".join(ingredients_list),
-        "Cuisine": "Custom AI",
-        "Category": "Non-Veg" if any(x in tokens for x in ["chicken", "egg", "beef"]) else "Veg",
-        "CookingTime": 20,
-        "Calories (kcal)": None,
-        "Carbohydrates g": None,
-        "Protein g": None,
-        "Fats g": None,
-        "Free Sugar g": None,
-        "Fibre g": None,
-        "Sodium mg": None,
-        "Calcium mg": None,
-        "Iron mg": None,
-        "similarity_score": 1.0,
-        "ingredient_match": "100%",
-        "match_type": "AI Generated (Smart Strict Mode)"
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    generation_config={
+        "temperature": 0.4,        # lower = more deterministic JSON
+        "top_p": 0.9,
+        "max_output_tokens": 2048,
     }
+)
+
+# ==========================
+# HELPERS
+# ==========================
+def _build_prompt(ingredients, cuisine, category, allergies, cooking_time, top_k):
+    if isinstance(allergies, list):
+        allergy_str = ", ".join(allergies) if allergies else "none"
+    elif isinstance(allergies, str) and allergies.strip():
+        allergy_str = allergies.strip()
+    else:
+        allergy_str = "none"
+
+    cuisine_str  = str(cuisine).strip()  if cuisine  else "any"
+    category_str = str(category).strip() if category else "any"
+    time_str     = str(int(cooking_time)) if cooking_time else "any"
+
+    return f"""
+You are a professional chef AI assistant for ChefAI.
+
+INGREDIENTS:
+{ingredients}
+
+Pantry staples always available:
+salt, sugar, oil, water, pepper, spices, butter, ghee, garlic, ginger.
+
+User constraints:
+Cuisine: {cuisine_str}
+Category: {category_str}
+Allergies: {allergy_str}
+Max cooking time: {time_str} minutes
+
+Generate EXACTLY {top_k} recipes.
+
+STRICT RULES:
+- Use ONLY given ingredients + pantry staples
+- Respect ALL filters strictly
+- No allergens
+- Do not exceed cooking time
+- Must match cuisine/category
+
+OUTPUT FORMAT:
+Return ONLY valid JSON array. No explanation. No markdown.
+
+Schema:
+[
+  {{
+    "rank": 1,
+    "recipe_name": "",
+    "final_recipe_name": "",
+    "ingredients": "",
+    "Instructions": "",
+    "Detailed_Ingredients": "",
+    "Cuisine": "",
+    "Category": "",
+    "CookingTime": 0,
+    "Calories (kcal)": 0.0,
+    "Carbohydrates g": 0.0,
+    "Protein g": 0.0,
+    "Fats g": 0.0,
+    "Free Sugar g": 0.0,
+    "Fibre g": 0.0,
+    "Sodium mg": 0.0,
+    "Calcium mg": 0.0,
+    "Iron mg": 0.0,
+    "similarity_score": 1.0,
+    "ingredient_match": "100%",
+    "match_type": "AI Generated"
+  }}
+]
+"""
 
 
-# =========================
-# STRICT MATCH FUNCTION
-# =========================
-def get_strict_recipes(user_input, top_k=3):
+def _safe_float(v):
+    try:
+        return float(v)
+    except:
+        return None
+
+
+def _safe_int(v):
+    try:
+        return int(v)
+    except:
+        return None
+
+
+def _extract_json(text):
     """
-    Return recipes that can be made ONLY with given ingredients
-    + basic pantry items.
-    If none found → generate AI recipe.
+    Gemini sometimes adds junk → extract JSON safely.
     """
+    text = re.sub(r"```(?:json)?", "", text).strip().rstrip("`").strip()
 
-    if df is None or len(df) == 0:
+    # Try direct parse first
+    try:
+        return json.loads(text)
+    except:
+        pass
+
+    # Try extracting JSON block
+    match = re.search(r"\[.*\]", text, re.DOTALL)
+    if match:
+        return json.loads(match.group(0))
+
+    raise json.JSONDecodeError("No valid JSON found", text, 0)
+
+
+def _parse_response(raw_text, top_k):
+    data = _extract_json(raw_text)
+
+    if not isinstance(data, list):
+        data = [data]
+
+    results = []
+    for i, r in enumerate(data[:top_k]):
+        results.append({
+            "rank": _safe_int(r.get("rank", i + 1)),
+            "recipe_name": str(r.get("recipe_name", "")).strip(),
+            "final_recipe_name": str(r.get("final_recipe_name", "")).strip(),
+            "ingredients": str(r.get("ingredients", "")).strip(),
+            "Instructions": str(r.get("Instructions", "")).strip(),
+            "Detailed_Ingredients": str(r.get("Detailed_Ingredients", "")).strip(),
+            "Cuisine": str(r.get("Cuisine", "")).strip(),
+            "Category": str(r.get("Category", "")).strip(),
+            "CookingTime": _safe_int(r.get("CookingTime")),
+            "Calories (kcal)": _safe_float(r.get("Calories (kcal)")),
+            "Carbohydrates g": _safe_float(r.get("Carbohydrates g")),
+            "Protein g": _safe_float(r.get("Protein g")),
+            "Fats g": _safe_float(r.get("Fats g")),
+            "Free Sugar g": _safe_float(r.get("Free Sugar g")),
+            "Fibre g": _safe_float(r.get("Fibre g")),
+            "Sodium mg": _safe_float(r.get("Sodium mg")),
+            "Calcium mg": _safe_float(r.get("Calcium mg")),
+            "Iron mg": _safe_float(r.get("Iron mg")),
+            "similarity_score": 1.0,
+            "ingredient_match": "100%",
+            "match_type": "AI Generated",
+        })
+
+    return results
+
+
+# ==========================
+# PUBLIC API
+# ==========================
+def get_strict_recipes(
+    user_input,
+    top_k=3,
+    cuisine=None,
+    category=None,
+    allergies=None,
+    cooking_time=None,
+):
+    if not user_input or not str(user_input).strip():
         return []
 
-    # Clean + tokenize input
-    user_tokens = get_ingredient_tokens(user_input)
+    prompt = _build_prompt(
+        user_input.strip(),
+        cuisine,
+        category,
+        allergies,
+        cooking_time,
+        top_k
+    )
 
-    if not user_tokens:
+    try:
+        response = model.generate_content(prompt)
+
+        if not response or not hasattr(response, "text"):
+            print("[ChefAI] Empty Gemini response")
+            return []
+
+        raw_text = response.text.strip()
+
+        recipes = _parse_response(raw_text, top_k)
+
+        return recipes
+
+    except json.JSONDecodeError as e:
+        print(f"[ChefAI] JSON parse error: {e}")
         return []
 
-    allowed_tokens = user_tokens.union(BASIC_INGREDIENTS)
-
-    strict_results = []
-
-    for _, row in df.iterrows():
-        recipe_tokens = get_ingredient_tokens(row["ingredients_clean"])
-
-        # STRICT CHECK
-        if recipe_tokens.issubset(allowed_tokens):
-            strict_results.append(row)
-
-    # =========================
-    # CASE 1: STRICT MATCH FOUND
-    # =========================
-    if len(strict_results) > 0:
-        final_results = []
-
-        for i, recipe in enumerate(strict_results[:top_k]):
-            result = {
-                "rank": i + 1,
-                "recipe_name": safe_str(recipe.get("recipe_name", "")),
-                "final_recipe_name": safe_str(recipe.get("final_recipe_name", "")),
-                "ingredients": safe_str(recipe.get("ingredients", "")),
-                "Instructions": safe_str(recipe.get("Instructions", "")),
-                "Detailed_Ingredients": safe_str(recipe.get("Detailed_Ingredients", "")),
-                "Cuisine": safe_str(recipe.get("Cuisine", "")),
-                "Category": safe_str(recipe.get("Category", "")),
-                "CookingTime": int(recipe["CookingTime"]) if pd.notna(recipe["CookingTime"]) else None,
-                "Calories (kcal)": float(recipe["Calories (kcal)"]) if pd.notna(recipe["Calories (kcal)"]) else None,
-                "Carbohydrates g": float(recipe["Carbohydrates g"]) if pd.notna(recipe["Carbohydrates g"]) else None,
-                "Protein g": float(recipe["Protein g"]) if pd.notna(recipe["Protein g"]) else None,
-                "Fats g": float(recipe["Fats g"]) if pd.notna(recipe["Fats g"]) else None,
-                "Free Sugar g": float(recipe["Free Sugar g"]) if pd.notna(recipe["Free Sugar g"]) else None,
-                "Fibre g": float(recipe["Fibre g"]) if pd.notna(recipe["Fibre g"]) else None,
-                "Sodium mg": float(recipe["Sodium mg"]) if pd.notna(recipe["Sodium mg"]) else None,
-                "Calcium mg": float(recipe["Calcium mg"]) if pd.notna(recipe["Calcium mg"]) else None,
-                "Iron mg": float(recipe["Iron mg"]) if pd.notna(recipe["Iron mg"]) else None,
-                "similarity_score": 1.0,
-                "ingredient_match": "100%",
-                "match_type": "Strict Match"
-            }
-
-            final_results.append(result)
-
-        return final_results
-
-    # =========================
-    # CASE 2: NO STRICT MATCH → AI FALLBACK
-    # =========================
-    ai_recipe = generate_ai_recipe(user_tokens)
-
-    return [ai_recipe]
+    except Exception as e:
+        print(f"[ChefAI] Gemini error: {e}")
+        return []
