@@ -241,4 +241,4 @@ def get_strict_recipes(user_input, top_k=3):
     # =========================
     ai_recipe = generate_ai_recipe(user_tokens)
 
-    return [ai_recipe]
+    return [ai_recipe] 
