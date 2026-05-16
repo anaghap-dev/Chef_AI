@@ -90,7 +90,7 @@ const defaultRecipes = [
 
 function Home() {
   const [ingredients, setIngredients] = useState("");
-  
+
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedCookingTime, setSelectedCookingTime] = useState("");
   const [selectedCuisine, setSelectedCuisine] = useState("");
@@ -104,15 +104,13 @@ function Home() {
   const [error, setError] = useState(null);
 
   
- // =========================
-// LOAD SAVED STATE (FIXED)
+// =========================
+// LOAD SAVED STATE (uses sessionStorage so closing the tab clears it)
 // =========================
 useEffect(() => {
   const state = location.state;
 
-  // =========================
-  // 1. BACK NAVIGATION RESTORE FROM DETAILS
-  // =========================
+  // 1. If navigating back from details, restore passed state
   if (state?.fromDetails) {
     const hasRecipeState = state && typeof state === "object" && (
       Object.prototype.hasOwnProperty.call(state, "recipes") ||
@@ -120,59 +118,25 @@ useEffect(() => {
     );
 
     if (hasRecipeState) {
-      setRecipes(
-        Object.prototype.hasOwnProperty.call(state, "recipes")
-          ? state.recipes
-          : defaultRecipes
-      );
-      setStrictRecipes(
-        Object.prototype.hasOwnProperty.call(state, "strictRecipes")
-          ? state.strictRecipes
-          : null
-      );
+      setRecipes(Object.prototype.hasOwnProperty.call(state, "recipes") ? state.recipes : defaultRecipes);
+      setStrictRecipes(Object.prototype.hasOwnProperty.call(state, "strictRecipes") ? state.strictRecipes : null);
 
-      setIngredients(
-        Object.prototype.hasOwnProperty.call(state, "ingredients")
-          ? state.ingredients
-          : ""
-      );
-      setSelectedCuisine(
-        Object.prototype.hasOwnProperty.call(state, "selectedCuisine")
-          ? state.selectedCuisine
-          : ""
-      );
-      setSelectedCategory(
-        Object.prototype.hasOwnProperty.call(state, "selectedCategory")
-          ? state.selectedCategory
-          : ""
-      );
-      setSelectedCookingTime(
-        Object.prototype.hasOwnProperty.call(state, "selectedCookingTime")
-          ? state.selectedCookingTime
-          : ""
-      );
-      setAllergy(
-        Object.prototype.hasOwnProperty.call(state, "allergy")
-          ? state.allergy
-          : ""
-      );
-      setMessage(
-        Object.prototype.hasOwnProperty.call(state, "message")
-          ? state.message
-          : ""
-      );
+      setIngredients(Object.prototype.hasOwnProperty.call(state, "ingredients") ? state.ingredients : "");
+      setSelectedCuisine(Object.prototype.hasOwnProperty.call(state, "selectedCuisine") ? state.selectedCuisine : "");
+      setSelectedCategory(Object.prototype.hasOwnProperty.call(state, "selectedCategory") ? state.selectedCategory : "");
+      setSelectedCookingTime(Object.prototype.hasOwnProperty.call(state, "selectedCookingTime") ? state.selectedCookingTime : "");
+      setAllergy(Object.prototype.hasOwnProperty.call(state, "allergy") ? state.allergy : "");
+      setMessage(Object.prototype.hasOwnProperty.call(state, "message") ? state.message : "");
       return;
     }
 
-    const saved = localStorage.getItem("recipeSearchState");
-
+    // If fromDetails but no full recipe state passed, try sessionStorage
+    const saved = sessionStorage.getItem("recipeSearchState");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-
         setRecipes(parsed.recipes || defaultRecipes);
         setStrictRecipes(parsed.strictRecipes || null);
-
         setIngredients(parsed.ingredients || "");
         setSelectedCuisine(parsed.selectedCuisine || "");
         setSelectedCategory(parsed.selectedCategory || "");
@@ -183,21 +147,17 @@ useEffect(() => {
         console.error(e);
       }
     }
+
     return;
   }
 
-  // =========================
-  // 2. NORMAL LOCAL STORAGE LOAD
-  // =========================
-  const savedState = localStorage.getItem("recipeSearchState");
-
+  // Normal load: attempt to restore from sessionStorage
+  const savedState = sessionStorage.getItem("recipeSearchState");
   if (savedState) {
     try {
       const parsed = JSON.parse(savedState);
-
       setRecipes(parsed.recipes?.length ? parsed.recipes : defaultRecipes);
       setStrictRecipes(parsed.strictRecipes || null);
-
       setIngredients(parsed.ingredients || "");
       setSelectedCuisine(parsed.selectedCuisine || "");
       setSelectedCategory(parsed.selectedCategory || "");
@@ -210,9 +170,7 @@ useEffect(() => {
     }
   }
 
-  // =========================
-  // 3. DEFAULT
-  // =========================
+  // default
   setRecipes(defaultRecipes);
   setStrictRecipes(null);
 }, [location]);
@@ -233,7 +191,7 @@ useEffect(() => {
     message
   };
 
-  localStorage.setItem("recipeSearchState", JSON.stringify(stateToSave));
+  sessionStorage.setItem("recipeSearchState", JSON.stringify(stateToSave));
 }, [
   recipes,
   strictRecipes,
@@ -324,7 +282,7 @@ if (data.recipes && data.recipes.length > 0) {
 
 
       setMessage("Found 5 Recipes");
-      localStorage.setItem("recipeSearchState", JSON.stringify({
+      sessionStorage.setItem("recipeSearchState", JSON.stringify({
   recipes: transformed,
   strictRecipes: strict,
   ingredients,

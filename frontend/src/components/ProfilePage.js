@@ -20,7 +20,7 @@ const Profile = () => {
   const fileInputRef = useRef(null);
   const formattedRecipes = savedRecipes.map((r) => ({
   recipe_name: r.recipe_name,
-  image: r.recipe_image,
+  image: r.recipe_image || r.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
   time: "",
   cuisine: ""
 }));
@@ -72,7 +72,33 @@ const Profile = () => {
     if (error) {
       console.log("Fetch error:", error.message);
     } else {
-      setSavedRecipes(data);
+        // If saved rows don't include an image, try to fetch images from the recipes table
+        try {
+          const names = data.map((d) => d.recipe_name).filter(Boolean);
+          if (names.length > 0) {
+            const { data: recipesData } = await supabase
+              .from("recipes")
+              .select("recipe_name, image")
+              .in("recipe_name", names);
+
+            const imageMap = (recipesData || []).reduce((acc, r) => {
+              if (r.recipe_name) acc[r.recipe_name] = r.image;
+              return acc;
+            }, {});
+
+            const merged = data.map((row) => ({
+              ...row,
+              recipe_image: row.recipe_image || imageMap[row.recipe_name]
+            }));
+
+            setSavedRecipes(merged);
+          } else {
+            setSavedRecipes(data);
+          }
+        } catch (err) {
+          console.log("Error merging images:", err?.message || err);
+          setSavedRecipes(data);
+        }
     }
   };
 

@@ -6,6 +6,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
 import warnings
+from typing import Any, Optional
 
 warnings.filterwarnings("ignore")
 
@@ -19,9 +20,10 @@ DATA_PATH = "data/recipes.csv"
 # =========================
 # GLOBALS
 # =========================
-df = None
-vectorizer = None
-model_loaded = False
+# Dataframe and vectorizer are loaded at runtime, but may be None before initialization.
+df: Optional[pd.DataFrame] = None
+vectorizer: Optional[TfidfVectorizer] = None
+model_loaded: bool = False
 
 
 # =========================
@@ -69,14 +71,14 @@ ingredient_map = {
     "potato aloo": "potato"
 }
 
-def safe_str(value):
+def safe_str(value: Any) -> str:
     """Convert any value safely to string."""
-    if pd.isna(value):
+    if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
 
-def clean_text(text):
+def clean_text(text: Any) -> str:
     """Clean and normalize text for matching."""
     text = safe_str(text).lower()
     text = re.sub(r"[^a-zA-Z\s]", " ", text)   # keep only letters + spaces
@@ -97,19 +99,21 @@ def clean_ingredients(text):
     return text
 
 
-def get_column_name(possible_names):
+def get_column_name(possible_names: list[str]) -> Optional[str]:
     """
     Return first matching column name from df.
     Helps support different CSV header variations.
     """
     global df
+    if df is None:
+        return None
     for col in possible_names:
         if col in df.columns:
             return col
     return None
 
 
-def get_value_from_row(row, possible_names, default=""):
+def get_value_from_row(row: pd.Series, possible_names: list[str], default: Any = "") -> Any:
     """Get first available value from row using multiple possible column names."""
     for col in possible_names:
         if col in row.index:
@@ -123,9 +127,12 @@ def get_ingredient_tokens(text):
     return set(cleaned.split()) if cleaned else set()
 
 
-def normalize_dataframe():
+def normalize_dataframe() -> None:
     """Normalize dataset columns to the standardized internal names."""
     global df
+
+    if df is None:
+        return
 
     recipe_name_col = get_column_name(["recipe_name", "Recipe Name", "recipe"])
     ingredients_col = get_column_name(["ingredients", "Ingredients"])
@@ -324,6 +331,7 @@ def initialize_model():
                 vectorizer = pickle.load(f)
             normalize_dataframe()
             model_loaded = True
+            assert df is not None
             print(f"[MODEL] Loaded {len(df)} recipes from saved model")
             return
     except Exception as e:
@@ -345,6 +353,7 @@ def initialize_model():
         sublinear_tf=True
     )
 
+    assert df is not None
     vectorizer.fit(df["ingredients_clean"])
 
     # Save model
@@ -369,6 +378,8 @@ def calculate_scores(user_vector, user_tokens, cuisine_filter=None, category_fil
     Optional small bonuses for cuisine/category matches.
     """
     global df, vectorizer
+    if df is None or vectorizer is None:
+        raise RuntimeError("Recipe matcher is not initialized")
 
     # Transform all recipe ingredient vectors
     all_vectors = vectorizer.transform(df["ingredients_clean"])
@@ -497,6 +508,8 @@ def recommend_recipes(user_input, cuisine=None, category=None, allergies=None, c
 
     if not model_loaded:
         initialize_model()
+    if df is None or vectorizer is None:
+        raise RuntimeError("Recipe matcher initialization failed")
 
     # Clean user input
     user_input_clean = clean_ingredients(user_input)

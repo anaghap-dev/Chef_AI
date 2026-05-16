@@ -13,10 +13,11 @@ def image_input():
         return jsonify({"error": "No image file provided"}), 400
 
     file = request.files["image"]
-    if file.filename == "":
+    filename = file.filename
+    if not filename:
         return jsonify({"error": "Empty filename"}), 400
 
-    path = os.path.join(UPLOAD_FOLDER, file.filename)
+    path = os.path.join(UPLOAD_FOLDER, filename)
     file.save(path)
 
     try:

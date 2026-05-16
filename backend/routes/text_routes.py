@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import pandas as pd
 import traceback
+from typing import Any
 
 from modules.recipe_matcher_prod import recommend_recipes, df, safe_str
 from modules.strict_recipe_matcher import get_strict_recipes
@@ -11,7 +12,7 @@ text_routes = Blueprint("text_routes", __name__)
 # =========================
 # HELPERS
 # =========================
-def get_row_value(row, possible_names, default=""):
+def get_row_value(row: pd.Series, possible_names: list[str], default: Any = "") -> Any:
     """
     Return first available value from a pandas row for multiple possible column names.
     """
