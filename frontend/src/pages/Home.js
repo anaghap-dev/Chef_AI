@@ -97,7 +97,7 @@ function Home() {
   const [allergy, setAllergy] = useState("");
   const [strictRecipes, setStrictRecipes] = useState(null); // 🔥 NEW STATE
   const location = useLocation();
-  
+
   const [recipes, setRecipes] = useState(defaultRecipes);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -237,27 +237,35 @@ useEffect(() => {
       );
 
       const data = await response.json();
+      console.log("FULL API RESPONSE:", data);
+      console.log("STRICT:", data.strict_recipes);
       let transformed = [];
      
       
 
-     // =========================
-// 🔥 STRICT RECIPE FIRST
+// =========================
+// STRICT RECIPE FIRST
 // =========================
 let strict = null;
 
 if (data.strict_recipes && data.strict_recipes.length > 0) {
   strict = {
     ...data.strict_recipes[0],
+
     time: data.strict_recipes[0].CookingTime
       ? `${data.strict_recipes[0].CookingTime} mins`
       : "N/A",
-    cuisine: data.strict_recipes[0].Cuisine || "Unknown",
+
+    cuisine:
+      data.strict_recipes[0].Cuisine || "Unknown",
+
     image:
       "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
   };
 
+  console.log("SETTING STRICT:", strict);
   setStrictRecipes(strict);
+
 } else {
   setStrictRecipes(null);
 }
@@ -377,19 +385,29 @@ if (data.recipes && data.recipes.length > 0) {
       {message && <p style={styles.center}>{message}</p>}
 
       {/* 🔹 NORMAL RESULTS */}
-      <SuggestedRecipes recipes={recipes} strictRecipes={strictRecipes} />
-
+      <SuggestedRecipes recipes={recipes} strictRecipes={strictRecipes}
+      ingredients={ingredients}
+      selectedCategory={selectedCategory}
+      selectedCuisine={selectedCuisine}
+      selectedCookingTime={selectedCookingTime}
+      allergy={allergy}
+      message={message} />
       {/* 🔥 STRICT RESULT */}
-      {strictRecipes && (
+      {strictRecipes?.recipe_name && (
         <div style={styles.strictContainer}>
           <h2 style={styles.strictTitle}>
             🔥 Perfect Match (Only Your Ingredients)
           </h2>
-
           <RecipeCard
             recipe={strictRecipes}
-            strictRecipes={strictRecipes}
             recipes={recipes}
+            ingredients={ingredients}
+            selectedCategory={selectedCategory}
+            selectedCuisine={selectedCuisine}
+            selectedCookingTime={selectedCookingTime}
+            allergy={allergy}
+            message={message}
+            strictRecipes={strictRecipes}
           />
         </div>
       )}

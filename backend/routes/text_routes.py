@@ -227,6 +227,8 @@ def search_by_text():
     """
     try:
         data = request.get_json()
+        print(type(data))
+        print(data)
 
         if not data:
             return jsonify({
@@ -234,6 +236,12 @@ def search_by_text():
                 "message": "No JSON body provided",
                 "recipes": []
             }), 400
+        if isinstance(data, str):
+            import json
+            data = json.loads(data)
+
+        print(type(data))
+        print(data)
 
         ingredients = safe_str(data.get("ingredients", "")).strip()
         cuisine = data.get("cuisine")
@@ -257,7 +265,7 @@ def search_by_text():
         except:
             top_k = 5
 
-        # Get base recommendations
+        # Get base recommendations (for Suggested for you)
         base_recipes = recommend_recipes(
             user_input=ingredients,
             cuisine=cuisine,
@@ -273,8 +281,28 @@ def search_by_text():
             merged = merge_recipe_with_details(recipe)
             final_recipes.append(merged)
 
-        # Compute strict-match recipes separately
-        strict_recipes = get_strict_recipes(ingredients, top_k=1)
+        # Compute strict-match recipes (Perfect Match section)
+        perfect_match = get_strict_recipes(
+            ingredients, 
+            top_k=1, 
+            allergies=allergies,
+            cuisine=cuisine, 
+            category=category
+        )
+        
+        # If NO strict match found, fallback to recommend_recipes for perfect match
+        if not perfect_match:
+            print("No strict match found, using recommend_recipes as fallback for perfect match")
+            fallback_recipes = recommend_recipes(
+                user_input=ingredients,
+                cuisine=cuisine,
+                category=category,
+                allergies=allergies,
+                cooking_time=cooking_time,
+                top_k=1
+            )
+            if fallback_recipes:
+                perfect_match = [fallback_recipes[0]]  # Take top 1
         
 
         return jsonify({
@@ -289,7 +317,7 @@ def search_by_text():
             },
             "count": len(final_recipes),
             "recipes": final_recipes,
-            "strict_recipes": strict_recipes,
+            "strict_recipes": perfect_match,
             "message": f"Found {len(final_recipes)} recipes matching your preferences"
         }), 200
 

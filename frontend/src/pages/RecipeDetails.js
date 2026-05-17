@@ -7,6 +7,8 @@ function RecipeDetails() {
   const location = useLocation();
   const navigate = useNavigate();
   const recipe = location.state?.recipe;
+  const recipeType = recipe?.type || recipe?.match_type;
+  const isStrict = recipeType === "strict";
   const recipeName = recipe?.recipe_name;
   const [fullRecipe, setFullRecipe] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
@@ -17,25 +19,30 @@ function RecipeDetails() {
   const normalizedRecipe = normalizeRecipe(recipe, fullRecipe || {});
 
   useEffect(() => {
-    const fetchRecipe = async () => {
-      if (!recipeName) return;
+  const fetchRecipe = async () => {
+    // ONLY strict recipes exist in Supabase
+    if (!isStrict || !recipeName) {
+      setFullRecipe(recipe);
+      return;
+    }
 
-      const { data, error } = await supabase
-        .from("recipes")
-        .select("*")
-        .eq("recipe_name", recipeName)
-        .single();
+    const { data, error } = await supabase
+      .from("recipes")
+      .select("*")
+      .eq("recipe_name", recipeName)
+      .maybeSingle();
 
-      if (error) {
-        console.log(error.message);
-        return;
-      }
+    if (error) {
+      console.log("Supabase error:", error.message);
+      setFullRecipe(recipe);
+      return;
+    }
 
-      setFullRecipe(data);
-    };
+    setFullRecipe(data || recipe);
+  };
 
-    fetchRecipe();
-  }, [recipeName]);
+  fetchRecipe();
+}, [isStrict, recipeName, recipe]);
 
   useEffect(() => {
     const checkSaved = async () => {
@@ -54,7 +61,7 @@ function RecipeDetails() {
     };
 
     checkSaved();
-  }, [recipeName, fullRecipe]);
+  }, [recipe, isStrict, recipeName, fullRecipe]);
 
   const handleAddMissing = (e) => {
     if (!e.target.checked) return;
