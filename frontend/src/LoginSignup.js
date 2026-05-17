@@ -16,81 +16,82 @@ function LoginSignup() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-     const {  error } = await supabase.auth.signInWithPassword({
-    email:email,
-    password:password,
-  });
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
    
     alert("✅ Login successful! Welcome back to ChefAI 👨‍🍳");
-    setTimeout( () =>{
-    navigate("/profile"); // redirect to profile page after login
-  }, 1000);
-
+    setTimeout(() => {
+      navigate("/profile");
+    }, 1000);
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
 
-
-  if (password !== confirmPassword) {
-    alert("Passwords do not match");
-    return;
-  }
-  
-      const {  error } = await supabase.auth.signUp({
-    email:email,
-    password:password,
-    options:{
-      data:{
-        username:username,
-        firstName:firstName,
-        lastName:lastName
-      }
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
     }
-  });
+  
+    const { error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+      options:{
+        data:{
+          username: username,
+          firstName: firstName,
+          lastName: lastName
+        }
+      }
+    });
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
     alert("✅ Account created! Please login");
-    setPage("login"); // switch to login page after signup
+    setPage("login");
   };
 
   return (
     <div className="login-container">
+
       <div style={{
-       position: "absolute",
-      top: "20px",
-       right: "20px",
-       zIndex:9999
-    }}>
-  <button type="button"
-    onClick={() =>  navigate("/")}
- style={{
-      padding: "8px 14px",
-      borderRadius: "8px",
-      border: "none",
-      backgroundColor: "#f07238",
-      color: "#fff",
-      fontWeight: "600",
-      cursor: "pointer"
-    }}
-  >
-    Home
-  </button>
-    </div>
+        position: "absolute",
+        top: "20px",
+        right: "20px",
+        zIndex: 9999
+      }}>
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          style={{
+            padding: "8px 14px",
+            borderRadius: "8px",
+            border: "none",
+            backgroundColor: "#f07238",
+            color: "#fff",
+            fontWeight: "600",
+            cursor: "pointer"
+          }}
+        >
+          Home
+        </button>
+      </div>
 
       <div className="bg-pattern"></div>
 
       {page === "login" && (
         <div className="page active">
-
           <div className="content-wrapper">
 
             <div className="header-section">
@@ -102,39 +103,41 @@ function LoginSignup() {
 
               <div className="input-group">
                 <label>Username</label>
-                <input type="text" placeholder="Enter your username" value={username} onChange={(e) => setUsername(e.target.value)}/>
+                <input
+                  type="text"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
               </div>
 
               <div className="input-group">
                 <label>Email</label>
-                <input type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)}/>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
 
               <div className="input-group">
                 <label>Password</label>
-                <input type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)}/>
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
 
               <div className="forgot-section">
-                <Link to="/">Forgot Password?</Link>
+                <Link to="/forgot-password">Forgot Password?</Link>
               </div>
 
               <button className="login-button">Login</button>
 
             </form>
-
-            <div className="divider">
-              <span>or continue with</span>
-            </div>
-
-            <button className="google-button">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuARxCLdFA-0yyQWU6JkllNhK0wod6FAD30nAcKYx6XEubcXqDvXY4Pn3A9HsXNDNouIpWH_maQC-74vAbMGeh1R_j2suJxZ0cJtLI1POcfXqfVE-clYIOBog6mSNQXGrN5ORvTEpospmSO9SWVyhnr2_MBWbQRrWhZ1PwCI3fmgFiD9IiU3i0k3a9sC48wmS8SCP7fEwiC73Ep1yjKkACg2dsQZy0RV44vIhW2kkQ_nofq5J_HwmR3QV5vwlv1Glf15u18WJ4LUAh6I"
-                alt="google"
-                className="google-logo"
-              />
-              <span>Sign in with Google</span>
-            </button>
 
             <div className="signup-section">
               <p>
@@ -149,13 +152,11 @@ function LoginSignup() {
             </div>
 
           </div>
-
         </div>
       )}
 
       {page === "signup" && (
         <div className="page active">
-
           <div className="content-wrapper">
 
             <div className="header-section">
@@ -167,32 +168,56 @@ function LoginSignup() {
 
               <div className="input-group">
                 <label>First Name</label>
-                <input type="text" placeholder="Enter your first name" onChange={(e) => setFirstName(e.target.value)}/>
+                <input
+                  type="text"
+                  placeholder="Enter your first name"
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
               </div>
 
               <div className="input-group">
                 <label>Last Name</label>
-                <input type="text" placeholder="Enter your last name" onChange={(e) => setLastName(e.target.value)}/>
+                <input
+                  type="text"
+                  placeholder="Enter your last name"
+                  onChange={(e) => setLastName(e.target.value)}
+                />
               </div>
 
               <div className="input-group">
                 <label>Email</label>
-                <input type="email" placeholder="Enter your email" onChange={(e) => setEmail(e.target.value)}/>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
 
               <div className="input-group">
                 <label>Username</label>
-                <input type="text" placeholder="Enter your username" onChange={(e) => setUsername(e.target.value)}/>
+                <input
+                  type="text"
+                  placeholder="Enter your username"
+                  onChange={(e) => setUsername(e.target.value)}
+                />
               </div>
 
               <div className="input-group">
                 <label>Password</label>
-                <input type="password" placeholder="Enter your password" onChange={(e) => setPassword(e.target.value)}/>
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
 
               <div className="input-group">
                 <label>Confirm Password</label>
-                <input type="password" placeholder="Confirm your password" onChange={(e) => setConfirmPassword(e.target.value)}/>
+                <input
+                  type="password"
+                  placeholder="Confirm your password"
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
               </div>
 
               <button className="login-button">
@@ -214,7 +239,6 @@ function LoginSignup() {
             </div>
 
           </div>
-
         </div>
       )}
 
