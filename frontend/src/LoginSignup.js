@@ -127,15 +127,7 @@ function LoginSignup() {
               <span>or continue with</span>
             </div>
 
-            <button className="google-button">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuARxCLdFA-0yyQWU6JkllNhK0wod6FAD30nAcKYx6XEubcXqDvXY4Pn3A9HsXNDNouIpWH_maQC-74vAbMGeh1R_j2suJxZ0cJtLI1POcfXqfVE-clYIOBog6mSNQXGrN5ORvTEpospmSO9SWVyhnr2_MBWbQRrWhZ1PwCI3fmgFiD9IiU3i0k3a9sC48wmS8SCP7fEwiC73Ep1yjKkACg2dsQZy0RV44vIhW2kkQ_nofq5J_HwmR3QV5vwlv1Glf15u18WJ4LUAh6I"
-                alt="google"
-                className="google-logo"
-              />
-              <span>Sign in with Google</span>
-            </button>
-
+            
             <div className="signup-section">
               <p>
                 Don't have an account?
