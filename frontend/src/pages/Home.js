@@ -90,29 +90,27 @@ const defaultRecipes = [
 
 function Home() {
   const [ingredients, setIngredients] = useState("");
-  
+
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedCookingTime, setSelectedCookingTime] = useState("");
   const [selectedCuisine, setSelectedCuisine] = useState("");
   const [allergy, setAllergy] = useState("");
   const [strictRecipes, setStrictRecipes] = useState(null); // 🔥 NEW STATE
   const location = useLocation();
-  
+
   const [recipes, setRecipes] = useState(defaultRecipes);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState(null);
 
   
- // =========================
-// LOAD SAVED STATE (FIXED)
+// =========================
+// LOAD SAVED STATE (uses sessionStorage so closing the tab clears it)
 // =========================
 useEffect(() => {
   const state = location.state;
 
-  // =========================
-  // 1. BACK NAVIGATION RESTORE FROM DETAILS
-  // =========================
+  // 1. If navigating back from details, restore passed state
   if (state?.fromDetails) {
     const hasRecipeState = state && typeof state === "object" && (
       Object.prototype.hasOwnProperty.call(state, "recipes") ||
@@ -120,59 +118,25 @@ useEffect(() => {
     );
 
     if (hasRecipeState) {
-      setRecipes(
-        Object.prototype.hasOwnProperty.call(state, "recipes")
-          ? state.recipes
-          : defaultRecipes
-      );
-      setStrictRecipes(
-        Object.prototype.hasOwnProperty.call(state, "strictRecipes")
-          ? state.strictRecipes
-          : null
-      );
+      setRecipes(Object.prototype.hasOwnProperty.call(state, "recipes") ? state.recipes : defaultRecipes);
+      setStrictRecipes(Object.prototype.hasOwnProperty.call(state, "strictRecipes") ? state.strictRecipes : null);
 
-      setIngredients(
-        Object.prototype.hasOwnProperty.call(state, "ingredients")
-          ? state.ingredients
-          : ""
-      );
-      setSelectedCuisine(
-        Object.prototype.hasOwnProperty.call(state, "selectedCuisine")
-          ? state.selectedCuisine
-          : ""
-      );
-      setSelectedCategory(
-        Object.prototype.hasOwnProperty.call(state, "selectedCategory")
-          ? state.selectedCategory
-          : ""
-      );
-      setSelectedCookingTime(
-        Object.prototype.hasOwnProperty.call(state, "selectedCookingTime")
-          ? state.selectedCookingTime
-          : ""
-      );
-      setAllergy(
-        Object.prototype.hasOwnProperty.call(state, "allergy")
-          ? state.allergy
-          : ""
-      );
-      setMessage(
-        Object.prototype.hasOwnProperty.call(state, "message")
-          ? state.message
-          : ""
-      );
+      setIngredients(Object.prototype.hasOwnProperty.call(state, "ingredients") ? state.ingredients : "");
+      setSelectedCuisine(Object.prototype.hasOwnProperty.call(state, "selectedCuisine") ? state.selectedCuisine : "");
+      setSelectedCategory(Object.prototype.hasOwnProperty.call(state, "selectedCategory") ? state.selectedCategory : "");
+      setSelectedCookingTime(Object.prototype.hasOwnProperty.call(state, "selectedCookingTime") ? state.selectedCookingTime : "");
+      setAllergy(Object.prototype.hasOwnProperty.call(state, "allergy") ? state.allergy : "");
+      setMessage(Object.prototype.hasOwnProperty.call(state, "message") ? state.message : "");
       return;
     }
 
-    const saved = localStorage.getItem("recipeSearchState");
-
+    // If fromDetails but no full recipe state passed, try sessionStorage
+    const saved = sessionStorage.getItem("recipeSearchState");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-
         setRecipes(parsed.recipes || defaultRecipes);
         setStrictRecipes(parsed.strictRecipes || null);
-
         setIngredients(parsed.ingredients || "");
         setSelectedCuisine(parsed.selectedCuisine || "");
         setSelectedCategory(parsed.selectedCategory || "");
@@ -183,21 +147,17 @@ useEffect(() => {
         console.error(e);
       }
     }
+
     return;
   }
 
-  // =========================
-  // 2. NORMAL LOCAL STORAGE LOAD
-  // =========================
-  const savedState = localStorage.getItem("recipeSearchState");
-
+  // Normal load: attempt to restore from sessionStorage
+  const savedState = sessionStorage.getItem("recipeSearchState");
   if (savedState) {
     try {
       const parsed = JSON.parse(savedState);
-
       setRecipes(parsed.recipes?.length ? parsed.recipes : defaultRecipes);
       setStrictRecipes(parsed.strictRecipes || null);
-
       setIngredients(parsed.ingredients || "");
       setSelectedCuisine(parsed.selectedCuisine || "");
       setSelectedCategory(parsed.selectedCategory || "");
@@ -210,9 +170,7 @@ useEffect(() => {
     }
   }
 
-  // =========================
-  // 3. DEFAULT
-  // =========================
+  // default
   setRecipes(defaultRecipes);
   setStrictRecipes(null);
 }, [location]);
@@ -233,7 +191,7 @@ useEffect(() => {
     message
   };
 
-  localStorage.setItem("recipeSearchState", JSON.stringify(stateToSave));
+  sessionStorage.setItem("recipeSearchState", JSON.stringify(stateToSave));
 }, [
   recipes,
   strictRecipes,
@@ -279,27 +237,35 @@ useEffect(() => {
       );
 
       const data = await response.json();
+      console.log("FULL API RESPONSE:", data);
+      console.log("STRICT:", data.strict_recipes);
       let transformed = [];
      
       
 
-     // =========================
-// 🔥 STRICT RECIPE FIRST
+// =========================
+// STRICT RECIPE FIRST
 // =========================
 let strict = null;
 
 if (data.strict_recipes && data.strict_recipes.length > 0) {
   strict = {
     ...data.strict_recipes[0],
+
     time: data.strict_recipes[0].CookingTime
       ? `${data.strict_recipes[0].CookingTime} mins`
       : "N/A",
-    cuisine: data.strict_recipes[0].Cuisine || "Unknown",
+
+    cuisine:
+      data.strict_recipes[0].Cuisine || "Unknown",
+
     image:
       "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
   };
 
+  console.log("SETTING STRICT:", strict);
   setStrictRecipes(strict);
+
 } else {
   setStrictRecipes(null);
 }
@@ -324,7 +290,7 @@ if (data.recipes && data.recipes.length > 0) {
 
 
       setMessage("Found 5 Recipes");
-      localStorage.setItem("recipeSearchState", JSON.stringify({
+      sessionStorage.setItem("recipeSearchState", JSON.stringify({
   recipes: transformed,
   strictRecipes: strict,
   ingredients,
@@ -419,19 +385,29 @@ if (data.recipes && data.recipes.length > 0) {
       {message && <p style={styles.center}>{message}</p>}
 
       {/* 🔹 NORMAL RESULTS */}
-      <SuggestedRecipes recipes={recipes} strictRecipes={strictRecipes} />
-
+      <SuggestedRecipes recipes={recipes} strictRecipes={strictRecipes}
+      ingredients={ingredients}
+      selectedCategory={selectedCategory}
+      selectedCuisine={selectedCuisine}
+      selectedCookingTime={selectedCookingTime}
+      allergy={allergy}
+      message={message} />
       {/* 🔥 STRICT RESULT */}
-      {strictRecipes && (
+      {strictRecipes?.recipe_name && (
         <div style={styles.strictContainer}>
           <h2 style={styles.strictTitle}>
             🔥 Perfect Match (Only Your Ingredients)
           </h2>
-
           <RecipeCard
             recipe={strictRecipes}
-            strictRecipes={strictRecipes}
             recipes={recipes}
+            ingredients={ingredients}
+            selectedCategory={selectedCategory}
+            selectedCuisine={selectedCuisine}
+            selectedCookingTime={selectedCookingTime}
+            allergy={allergy}
+            message={message}
+            strictRecipes={strictRecipes}
           />
         </div>
       )}
