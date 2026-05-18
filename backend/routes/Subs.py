@@ -82,7 +82,7 @@ def get_substitutes():
         ]
 
         # TOP 5 MATCHES
-        top_matches = results.sort_values(
+        top_matches = results.sort_values( # type: ignore
             by="similarity",
             ascending=False
         ).head(5)

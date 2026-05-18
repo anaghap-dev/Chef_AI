@@ -139,9 +139,16 @@ STOPWORDS = {
 
 def safe_str(value: Any) -> str:
     """Convert any value safely to string."""
-    if value is None or pd.isna(value):
+    if value is None:
+        return ""
+    # Check if it's a list or array first
+    if isinstance(value, (list, tuple, np.ndarray)):
+        return " ".join(map(str, value)).strip() 
+    # Now it's safe to check pd.isna for scalar values
+    if pd.isna(value):
         return ""
     return str(value).strip()
+
 
 
 def clean_text(text: Any) -> str:
