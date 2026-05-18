@@ -7,6 +7,9 @@ import { useEffect, useState } from "react";
 
 function Navbar() {
   const [user,setUser] = useState(null);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,16 +23,24 @@ function Navbar() {
       }
     );
 
-    return () => listener.subscription.unsubscribe();
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      listener.subscription.unsubscribe();
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   const navbarStyle = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "15px 40px",
-    background: "#ffffff",
-    borderBottom: "1px solid #eee"
+    flexWrap: "wrap",
+    padding: windowWidth < 640 ? "12px 16px" : "15px 40px",
+    background: "var(--bg-light)",
+    color: "var(--text-light)",
+    borderBottom: "1px solid rgba(255,255,255,0.08)"
   };
 
   const logoSection = {
@@ -40,7 +51,11 @@ function Navbar() {
 
   const navLinks = {
     display: "flex",
-    gap: "20px"
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: windowWidth < 640 ? "10px" : "20px",
+    width: windowWidth < 640 ? "100%" : "auto",
+    marginTop: windowWidth < 640 ? "12px" : "0"
   };
 
   const buttonStyle = {
@@ -59,10 +74,10 @@ function Navbar() {
       {/* Logo */}
       <div style={logoSection}>
 
-        <img   src={logo}    alt="ChefAI"      style={{width:"60px"}}/>
+        <img src={logo} alt="ChefAI" style={{ width: "60px" }} />
 
-        <h1 style={{fontSize:"26px"}}>
-          Chef<span style={{color:"#f47b5d"}}>AI</span>
+        <h1 className="navbar-title">
+          Chef<span className="navbar-title-accent">AI</span>
         </h1>
 
       </div>

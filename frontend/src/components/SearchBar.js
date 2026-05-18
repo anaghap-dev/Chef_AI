@@ -1,8 +1,17 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MdKeyboardVoice } from "react-icons/md";
 import { FiCamera, FiSearch } from "react-icons/fi";
 
 function SearchBar({ ingredients, setIngredients }) {
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const [isListening, setIsListening] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const fileInputRef = useRef(null);
@@ -63,12 +72,24 @@ function SearchBar({ ingredients, setIngredients }) {
     }
   };
 
+  const searchBoxStyle = {
+    ...styles.searchBox,
+    padding: windowWidth < 640 ? "10px 12px" : "12px 14px",
+    maxWidth: windowWidth < 640 ? "100%" : "560px",
+    gap: windowWidth < 640 ? "8px" : "10px"
+  };
+
+  const iconStyle = {
+    ...styles.icon,
+    alignSelf: "center"
+  };
+
   return (
     <div style={styles.container}>
 
-      <div style={styles.searchBox}>
+      <div style={searchBoxStyle}>
 
-        <FiSearch size={20} style={styles.icon}/>
+        <FiSearch size={20} style={iconStyle}/>
 
         <input
           type="text"
@@ -81,7 +102,7 @@ function SearchBar({ ingredients, setIngredients }) {
         <MdKeyboardVoice
           size={22}
           onClick={startVoiceInput}
-          style={{ ...styles.icon, color: isListening ? "#e53e3e" : "#555" }}
+          style={{ ...iconStyle, color: isListening ? "#e53e3e" : "#555" }}
           title={isListening ? "Listening..." : "Search by voice"}
         />
 
@@ -96,7 +117,7 @@ function SearchBar({ ingredients, setIngredients }) {
         <FiCamera
           size={20}
           onClick={handleCameraClick}
-          style={{ ...styles.icon, color: isCapturing ? "#e53e3e" : "#555" }}
+          style={{ ...iconStyle, color: isCapturing ? "#e53e3e" : "#555" }}
           title={isCapturing ? "Detecting ingredients..." : "Search by photo"}
         />
 
@@ -108,33 +129,42 @@ function SearchBar({ ingredients, setIngredients }) {
 
 const styles = {
 
-container:{
-  display:"flex",
-  justifyContent:"center",
-  marginTop:"30px"
+container: {
+  display: "flex",
+  justifyContent: "center",
+  marginTop: "30px",
+  width: "100%",
+  padding: "0 16px",
+  boxSizing: "border-box"
 },
 
-searchBox:{
-  display:"flex",
-  alignItems:"center",
-  background:"#f3f3f3",
-  padding:"12px 18px",
-  borderRadius:"30px",
-  width:"420px",
-  gap:"12px"
+searchBox: {
+  display: "flex",
+  alignItems: "center",
+  background: "#f3f3f3",
+  padding: "12px 14px",
+  borderRadius: "30px",
+  width: "100%",
+  maxWidth: "100%",
+  gap: "10px",
+  flexWrap: "wrap"
 },
 
-input:{
-  border:"none",
-  background:"transparent",
-  outline:"none",
-  flex:1,
-  fontSize:"15px"
+input: {
+  border: "none",
+  background: "transparent",
+  outline: "none",
+  flex: "1 1 150px",
+  minWidth: "0",
+  fontSize: "15px",
+  padding: "8px 0",
+  width: "100%"
 },
 
-icon:{
-  cursor:"pointer",
-  color:"#555"
+icon: {
+  cursor: "pointer",
+  color: "#555",
+  flexShrink: 0
 }
 
 };

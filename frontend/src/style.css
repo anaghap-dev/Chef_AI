@@ -9,15 +9,51 @@
 :root {
     --primary: #f07238;
     --bg-light: #f8f6f6;
+    --bg-dark: #050814;
+    --text-light: #111827;
+    --text-dark: #f8fafc;
+}
+
+html.light {
+    --bg-light: #f8f6f6;
+    --bg-dark: #050814;
+    --text-light: #111827;
+    --text-dark: #f8fafc;
+}
+
+html.dark {
+    --bg-light: #050814;
+    --bg-dark: #f8f6f6;
+    --text-light: #f8fafc;
+    --text-dark: #111827;
 }
 
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     background: var(--bg-light);
+    color: var(--text-light);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.navbar-title {
+    font-size: 26px;
+    color: var(--text-light);
+    font-weight: 700;
+    margin: 0;
+}
+
+.navbar-title-accent {
+    color: #f47b5d;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+}
+
+html.dark .navbar-title-accent {
+    text-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
 
 .login-container {

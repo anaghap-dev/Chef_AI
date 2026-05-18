@@ -22,9 +22,9 @@ const defaultRecipes = [
     Instructions: "Cook quinoa, chop vegetables, mix with dressing, add feta.",
     "Detailed_Ingredients": "Quinoa, vegetables, feta, olive oil",
     "Calories (kcal)": 380, 
-    "Carbohydrates g": 45,
-    "Protein g": 14,
-    "Fats g": 18 
+    "Carbohydrates (g)": 45,
+    "Protein (g)": 14,
+    "Fats (g)": 18 
   }, 
   {
     recipe_name: "Pantry Pasta Pesto",
@@ -102,6 +102,23 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState(null);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const filterContainerStyle = {
+    ...styles.filterContainer,
+    gridTemplateColumns:
+      windowWidth < 640 ? "1fr" : "repeat(auto-fit, minmax(120px, 1fr))",
+    gap: windowWidth < 640 ? "10px" : "12px",
+    padding: windowWidth < 640 ? "12px 10px" : "14px 12px"
+  };
 
   
 // =========================
@@ -310,7 +327,7 @@ if (data.recipes && data.recipes.length > 0) {
   };
 
   return (
-    <div>
+    <div style={styles.pageWrapper}>
       <Navbar />
       <Hero />
 
@@ -320,7 +337,7 @@ if (data.recipes && data.recipes.length > 0) {
       />
 
       {/* FILTERS */}
-      <div style={styles.filterContainer}>
+      <div style={filterContainerStyle}>
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
@@ -421,34 +438,57 @@ if (data.recipes && data.recipes.length > 0) {
 const styles = {
   filterContainer: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: "15px",
-    padding: "20px"
+    gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+    gap: "10px",
+    padding: "14px 12px",
+    maxWidth: "1100px",
+    margin: "0 auto",
+    width: "100%",
+    boxSizing: "border-box"
   },
+
   input: {
-    padding: "10px",
-    borderRadius: "8px",
-    border: "1px solid #ccc"
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    border: "1px solid #ccc",
+    fontSize: "14px",
+    minWidth: "0",
+    boxSizing: "border-box"
   },
+
   center: {
     textAlign: "center",
     padding: "10px"
   },
+
   error: {
     color: "red",
     textAlign: "center"
   },
 
-  // 🔥 STRICT UI
   strictContainer: {
-    margin: "40px auto",
-    maxWidth: "800px",
-    textAlign: "center"
+    margin: "32px auto",
+    maxWidth: "1000px",
+    width: "100%",
+    padding: "0 16px",
+    textAlign: "center",
+    boxSizing: "border-box"
   },
+
   strictTitle: {
-    fontSize: "1.8rem",
+    fontSize: "clamp(1.3rem, 2vw, 1.8rem)",
     marginBottom: "20px",
     color: "#111"
+  },
+
+  pageWrapper: {
+    width: "100%",
+    maxWidth: "1280px",
+    margin: "0 auto",
+    padding: "0 16px",
+    overflowX: "hidden",
+    boxSizing: "border-box"
   }
 };
 
