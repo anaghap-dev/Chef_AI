@@ -492,14 +492,17 @@ const styles = {
     textAlign: "center"
   },
 
-  strictContainer: {
+    strictContainer: {
     margin: "32px auto",
     maxWidth: "1000px",
     width: "100%",
     padding: "0 16px",
     textAlign: "center",
-    boxSizing: "border-box"
-  },
+    boxSizing: "border-box",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center"
+},
 
   strictTitle: {
     fontSize: "clamp(1.3rem, 2vw, 1.8rem)",
