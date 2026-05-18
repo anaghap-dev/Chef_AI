@@ -350,15 +350,15 @@ JSON FORMAT:
                 else "Veg"
             ),
             "CookingTime": 20,
-            "Calories (kcal)": None,
-            "Carbohydrates g": None,
-            "Protein g": None,
-            "Fats g": None,
-            "Free Sugar g": None,
-            "Fibre g": None,
-            "Sodium mg": None,
-            "Calcium mg": None,
-            "Iron mg": None,
+            "Calories (kcal)": 350,
+            "Carbohydrates g": 40,
+            "Protein g": 18,
+            "Fats g": 12,
+            "Free Sugar g": 5,
+            "Fibre g": 6,
+            "Sodium mg": 400,
+            "Calcium mg": 120,
+            "Iron mg": 3,
             "similarity_score": 1.0,
             "ingredient_match": "100%",
             "match_type": "AI Generated Fallback Recipe"
@@ -389,7 +389,7 @@ def get_strict_recipes(user_input, top_k=3, allergies=None,cuisine=None,category
         return []
     
     # ALLOWED TOKENS
-    allowed_tokens = user_tokens.union(PANTRY_ITEMS)
+    allowed_tokens = user_tokens
 
     strict_results = []
 
@@ -398,15 +398,15 @@ def get_strict_recipes(user_input, top_k=3, allergies=None,cuisine=None,category
     
     if num_user_ingredients == 1:
         # Single ingredient: be lenient
-        MIN_MATCH_PERCENTAGE = 50
+        MIN_MATCH_PERCENTAGE = 60
         MIN_USER_INGREDIENT_MATCH = 1  # Just needs to use the 1 ingredient
     elif num_user_ingredients == 2:
         # Two ingredients: moderate
-        MIN_MATCH_PERCENTAGE = 55
+        MIN_MATCH_PERCENTAGE = 70
         MIN_USER_INGREDIENT_MATCH = 2
     else:
         # 3+ ingredients: strict
-        MIN_MATCH_PERCENTAGE = 60
+        MIN_MATCH_PERCENTAGE = 80
         MIN_USER_INGREDIENT_MATCH = 2
     
     for _, row in df.iterrows():
@@ -429,7 +429,7 @@ def get_strict_recipes(user_input, top_k=3, allergies=None,cuisine=None,category
         # Accept recipes that meet BOTH thresholds:
         # 1. 50%+ of recipe ingredients are available
         # 2. At least 1+ user-provided ingredient is used
-        if match_percentage >= MIN_MATCH_PERCENTAGE and len(user_ingredient_overlap) >= MIN_USER_INGREDIENT_MATCH:
+        if(match_percentage >= MIN_MATCH_PERCENTAGE and len(user_ingredient_overlap) >= 1):
             row["match_percentage"] = match_percentage
             row["user_ingredient_count"] = len(user_ingredient_overlap)
             strict_results.append(row)

@@ -44,29 +44,24 @@ ingredient_map = {
     "pearl onion": "onion",
     "onion paste": "onion",
 
-    "green chillies": "chilli",
-    "dry red chilli": "chilli",
-    "red chilli powder": "chilli",
-    "chili": "chilli",    
-    "chilli":"chili",
-    "chilli":"green chili",
-    "chilli powder":"chili powder",
-    "chili powder":"chili",
+    "chilli": "chilli",
+    "chili": "chilli",
     "chilies": "chilli",
     "green chili": "chilli",
-    "green chilies": "chilli",
-    "red chili": "chilli",
+    "green chillies": "chilli",
+    "red chilli powder": "chilli powder",
 
     "coriander leaves": "coriander",
     "coriander seeds": "coriander",
     "coriander powder": "coriander",
     "coriander dhania leaves": "coriander",
+    "coriander": "cilantro",
 
     "cumin seeds": "cumin",
     "cumin powder": "cumin",
 
     "paneer cubes": "paneer",
-    "chicken breasts": "chicken",
+    "paneer": "cottage cheese",
 
     "basmati rice": "rice",
     "idli rice": "rice",
@@ -74,11 +69,13 @@ ingredient_map = {
     "hung curd": "curd",
     "yogurt": "curd",
     "yoghurt": "curd",
+    "curd": "yogurt",
 
     "green bell pepper": "capsicum",
     "red bell pepper": "capsicum",
     "bell pepper": "capsicum",
     "yellow bell pepper": "capsicum",
+    "capsicum": "bell pepper",
 
     "spinach leaves": "spinach",
     "potato aloo": "potato",
@@ -113,9 +110,31 @@ STOPWORDS = {
     "taste",
     "required",
     "cooking",
+    "cooked",
     "seeds",
     "powder",
-    "leaves"
+    "leaves",
+    # quantities
+    "cup", "cups",
+    "tbsp", "tablespoon", "tablespoons",
+    "tsp", "teaspoon", "teaspoons",
+    "oz", "ounce", "ounces",
+    "ml", "l", "gram", "grams",
+    "kg", "g",
+
+    # size descriptors
+    "small", "medium", "large",
+
+    # cooking descriptors
+    "chopped", "minced", "grated", "sliced", "diced",
+    "crushed", "peeled", "cooked", "uncooked", "ripe",
+
+    # filler words
+    "fresh", "plain", "optional", "as", "needed", "taste",
+    "pinch", 
+    "dash",
+    "chilli",
+    "savory"
 }
 
 def safe_str(value: Any) -> str:
