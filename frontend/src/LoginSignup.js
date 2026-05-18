@@ -131,9 +131,7 @@ function LoginSignup() {
                 />
               </div>
 
-              <div className="forgot-section">
-                <Link to="/forgot-password">Forgot Password?</Link>
-              </div>
+          
 
               <button className="login-button">Login</button>
 
