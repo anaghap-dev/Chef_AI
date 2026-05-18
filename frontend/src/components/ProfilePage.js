@@ -11,7 +11,12 @@ import {
 const Profile = () => {
 
   const [showSettings, setShowSettings] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("chefai-theme") === "dark";
+    }
+    return false;
+  });
   const [notifications, setNotifications] = useState(true);
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -24,6 +29,14 @@ const Profile = () => {
   time: "",
   cuisine: ""
 }));
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const theme = darkMode ? "dark" : "light";
+    localStorage.setItem("chefai-theme", theme);
+    document.documentElement.classList.toggle("dark", darkMode);
+    document.documentElement.classList.toggle("light", !darkMode);
+  }, [darkMode]);
 
   useEffect(() => {
   const loadUser = async () => {

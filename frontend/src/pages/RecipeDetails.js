@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { useLocation, useNavigate } from "react-router-dom";
 import { normalizeRecipe } from "../utils/normalizeRecipe";
+import SubstitutesModal from "../components/SubstitutesModal";
 
 function RecipeDetails() {
   const location = useLocation();
@@ -15,8 +16,12 @@ function RecipeDetails() {
   const [popupMessage, setPopupMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+ 
 
   const normalizedRecipe = normalizeRecipe(recipe, fullRecipe || {});
+   console.log("RECIPE:", recipe);
+console.log("FULL RECIPE:", fullRecipe);
+console.log("NORMALIZED:", normalizedRecipe);
 
   useEffect(() => {
   const fetchRecipe = async () => {
@@ -260,6 +265,18 @@ function RecipeDetails() {
             { normalizedRecipe.detailedIngredients ||
               "No detailed ingredients available."}
           </p>
+ <SubstitutesModal
+  ingredients={
+    (fullRecipe?.ingredients ||
+      fullRecipe?.ingredient_list ||
+      fullRecipe?.ingredientsList ||
+      "")
+      .toString()
+      .split(",")
+      .map(i => i.trim())
+      .filter(Boolean)
+    }
+/>
         </section>
 
         <label style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "10px",marginBottom: "20px" }}>

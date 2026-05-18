@@ -43,8 +43,8 @@ title:{
 buttons:{
   display:"flex",
   justifyContent:"center",
-  gap:"15px",
-  marginBottom:"30px"
+  flexWrap: "wrap",
+  gap:"10px"
 },
 
 btn:{

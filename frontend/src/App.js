@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import GroceryCart from "./pages/GroceryCart";
@@ -6,6 +7,14 @@ import LoginSignup from "./LoginSignup";
 import ProfilePage from "./components/ProfilePage";
 
 function App() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const storedTheme = localStorage.getItem("chefai-theme");
+    const useDark = storedTheme === "dark";
+    document.documentElement.classList.toggle("dark", useDark);
+    document.documentElement.classList.toggle("light", !useDark);
+  }, []);
+
   return (
     <BrowserRouter>
 

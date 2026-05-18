@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { normalizeRecipe } from "../utils/normalizeRecipe";
 
@@ -11,11 +12,26 @@ function RecipeCard({recipe,
   selectedCookingTime,
   allergy,
   message }) {
+    const [windowWidth, setWindowWidth] = useState(
+      typeof window !== "undefined" ? window.innerWidth : 1024
+    );
     const navigate = useNavigate();
     const normalizedRecipe = normalizeRecipe(recipe);
+
+    useEffect(() => {
+      const handleResize = () => setWindowWidth(window.innerWidth);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
     
+  const cardStyle = {
+    ...styles.card,
+    minWidth: windowWidth < 640 ? "85vw" : styles.card.minWidth,
+    maxWidth: windowWidth < 640 ? "85vw" : styles.card.maxWidth
+  };
+
   return (
-      <div style={styles.card}>
+      <div style={cardStyle}>
       <div style={styles.imageContainer}>
         <img src={normalizedRecipe.image} alt="recipe" style={styles.image} />
       </div>
@@ -69,7 +85,9 @@ function RecipeCard({recipe,
 }
 const styles = {
   card: {
-    minWidth: "260px",
+    minWidth: "220px",
+    maxWidth: "320px",
+    width: "100%",
     background: "#fff",
     borderRadius: "15px",
     overflow: "hidden",
@@ -83,7 +101,7 @@ const styles = {
 
   image: {
     width: "100%",
-    height: "130px",
+    height: "150px",
     objectFit: "cover"
   },
 
@@ -94,19 +112,20 @@ const styles = {
   row: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
-    gap: "10px"
+    alignItems: "flex-start",
+    gap: "10px",
+    flexWrap: "wrap"
   },
 
   title: {
     margin: "0",
-    fontSize: "16px"
+    fontSize: "15px"
   },
 
   info: {
     fontSize: "13px",
     color: "#777",
-    marginTop: "4px"
+    marginTop: "6px"
   },
 
   button: {
@@ -115,7 +134,8 @@ const styles = {
     border: "none",
     background: "#f2f2f2",
     cursor: "pointer",
-    whiteSpace: "nowrap"
+    whiteSpace: "nowrap",
+    flexShrink: 0
   }
 };
 
