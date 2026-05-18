@@ -19,12 +19,17 @@ const defaultRecipes = [
     score: 0.95, 
     image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", 
     Category: "Veg",
-    Instructions: "Cook quinoa, chop vegetables, mix with dressing, add feta.",
+    Instructions: "1. Rinse and cook quinoa in salted water for 12-15 minutes until fluffy. 2. Chop cucumber, tomatoes, onions, and bell peppers finely. 3. In a bowl, whisk olive oil, lemon juice, salt, pepper, and oregano. 4. Mix cooked quinoa with chopped vegetables. 5. Pour dressing and toss gently until evenly coated. 6. Top with feta cheese and serve fresh.",
     "Detailed_Ingredients": "Quinoa, vegetables, feta, olive oil",
     "Calories (kcal)": 380, 
     "Carbohydrates (g)": 45,
     "Protein (g)": 14,
-    "Fats (g)": 18 
+    "Fats (g)": 18 ,
+    "Sodium (mg)":320,
+    "Fibre (g)": 7,
+    "Iron (mg)": 3.2,
+    "Calcium (mg)": 120,
+    "Free Sugar (g)": 6
   }, 
   {
     recipe_name: "Pantry Pasta Pesto",
@@ -34,12 +39,17 @@ const defaultRecipes = [
     score: 0.92, 
     image: "https://images.unsplash.com/photo-1525755662778-989d0524087e", 
     Category: "Veg", 
-    Instructions: "Cook pasta, blend pesto, mix and serve.", 
+    Instructions: "1. Boil pasta in salted water until al dente, then drain and reserve ½ cup pasta water. 2. In a blender, add basil, garlic, olive oil, parmesan, and blend into smooth pesto. 3. Heat a pan, add pasta and pesto together. 4. Add a splash of reserved pasta water for creamy texture. 5. Toss well and serve hot with grated cheese on top.", 
     "Detailed_Ingredients": "Pasta, basil, garlic, olive oil", 
     "Calories (kcal)": 520, 
-    "Carbohydrates g": 62, 
-    "Protein g": 18, 
-    "Fats g": 24 
+    "Carbohydrates (g)": 62, 
+    "Protein (g)": 18, 
+    "Fats (g)": 24,
+    "Sodium (mg)":410,
+    "Fibre (g)": 5,
+    "Iron (mg)": 2.8,
+    "Calcium (mg)": 140,
+    "Free Sugar (g)": 4
   }, 
   { 
     recipe_name: "Grilled Chicken Bowl", 
@@ -49,12 +59,17 @@ const defaultRecipes = [
     score: 0.93, 
     image: "https://images.unsplash.com/photo-1562967916-eb82221dfb92?auto=format&fit=crop&w=800&q=80", 
     Category: "Non-Veg", 
-    Instructions: "Grill seasoned chicken, cook rice, sauté vegetables, assemble bowl and serve.", 
+    Instructions: "1. Season chicken with salt and pepper. 2. Grill chicken until fully cooked. 3. Cook rice according to package instructions. 4. Sauté vegetables in olive oil until tender. 5. Assemble bowl with rice, grilled chicken, and sautéed vegetables.", 
     "Detailed_Ingredients": "Chicken breast, rice, bell peppers, olive oil, garlic, herbs, salt, pepper", 
     "Calories (kcal)": 480, 
-    "Carbohydrates g": 50, 
-    "Protein g": 35, 
-    "Fats g": 15 
+    "Carbohydrates (g)": 50, 
+    "Protein (g)": 35, 
+    "Fats (g)": 15,
+    "Sodium (mg)":520,
+    "Fibre (g)": 6,
+    "Iron (mg)": 2.5,
+    "Calcium (mg)": 60,
+    "Free Sugar (g)": 3
   }, 
   { 
     recipe_name: "Masala Omelette", 
@@ -64,12 +79,17 @@ const defaultRecipes = [
     score: 0.90, 
     image: "https://images.unsplash.com/photo-1608039829572-78524f79c4c7", 
     Category: "Non-Veg",
-    Instructions: "Beat eggs with spices, add chopped onions and chilies, cook on pan until golden.", 
+    Instructions: "1. Crack eggs into a bowl and whisk until fluffy. 2. Add chopped onion, green chili, coriander, turmeric, salt. 3. Heat oil in a pan. 4. Pour egg mixture and spread evenly. 5. Cook until golden on both sides. 6. Serve hot with chutney or bread.", 
     "Detailed_Ingredients": "Eggs, onion, green chili, turmeric, salt, oil, coriander leaves", 
     "Calories (kcal)": 220, 
-    "Carbohydrates g": 5, 
-    "Protein g": 14, 
-    "Fats g": 16 
+    "Carbohydrates (g)": 5, 
+    "Protein (g)": 14, 
+    "Fats (g)": 16,
+    "Sodium (mg)":280,
+    "Fibre (g)": 1,
+    "Iron (mg)": 2.0,
+    "Calcium (mg)": 55,
+    "Free Sugar (g)": 1 
   }, 
   { 
     recipe_name: "Chickpea Salad", 
@@ -79,12 +99,17 @@ const defaultRecipes = [
     score: 0.88, 
     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd", 
     Category: "Veg", 
-    Instructions: "Mix chickpeas with chopped vegetables, drizzle olive oil and lemon, toss well.", 
+    Instructions: "1. Rinse and drain chickpeas. 2. Chop cucumber, tomato, and onion. 3. Mix chickpeas with chopped vegetables. 4. Drizzle with olive oil and lemon juice. 5. Toss well and serve.", 
     "Detailed_Ingredients": "Boiled chickpeas, cucumber, tomato, onion, olive oil, lemon juice, salt", 
     "Calories (kcal)": 300, 
-    "Carbohydrates g": 40, 
-    "Protein g": 12, 
-    "Fats g": 10 
+    "Carbohydrates (g)": 40, 
+    "Protein (g)": 12, 
+    "Fats (g)": 10,
+    "Sodium (mg)":250,
+    "Fibre (g)": 9,
+    "Iron (mg)": 3.5,
+    "Calcium (mg)": 90,
+    "Free Sugar (g)": 6
   }
 ];
 
