@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { useLocation, useNavigate } from "react-router-dom";
 import { normalizeRecipe } from "../utils/normalizeRecipe";
+import SubstitutesModal from "../components/SubstitutesModal";
 
 function RecipeDetails() {
   const location = useLocation();
@@ -15,8 +16,12 @@ function RecipeDetails() {
   const [popupMessage, setPopupMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+ 
 
   const normalizedRecipe = normalizeRecipe(recipe, fullRecipe || {});
+   console.log("RECIPE:", recipe);
+console.log("FULL RECIPE:", fullRecipe);
+console.log("NORMALIZED:", normalizedRecipe);
 
   useEffect(() => {
   const fetchRecipe = async () => {
@@ -64,24 +69,64 @@ function RecipeDetails() {
   }, [recipe, isStrict, recipeName, fullRecipe]);
 
   const handleAddMissing = (e) => {
-    if (!e.target.checked) return;
+  if (!e.target.checked) return;
 
-    const newItems = [
-      { name: "Onion", qty: "2" },
-      { name: "Tomato", qty: "3" }
-    ];
+  const userIngredients = (
+    location.state?.ingredients || ""
+  )
+    .split(",")
+    .map((i) => i.trim().toLowerCase());
 
-    const existing = JSON.parse(localStorage.getItem("groceryItems")) || [];
+  const recipeIngredients =
+    normalizedRecipe.ingredientsList?.length
+      ? normalizedRecipe.ingredientsList
+      : normalizedRecipe.detailedIngredients
+          ?.split(",")
+          .map((i) => i.trim()) || [];
 
-    localStorage.setItem(
-      "groceryItems",
-      JSON.stringify([...existing, ...newItems])
-    );
+  const missing = recipeIngredients.filter(
+    (item) =>
+      !userIngredients.includes(
+        item.toLowerCase().trim()
+      )
+  );
 
-    setPopupMessage("Missing ingredients added to grocery cart!");
+  if (missing.length === 0) {
+    setPopupMessage("You already have all ingredients!");
     setShowPopup(true);
-  };
+    return;
+  }
 
+  const newItems = missing.map((item) => ({
+    name: item,
+    qty: ""
+  }));
+
+  const existing =
+    JSON.parse(localStorage.getItem("groceryItems")) || [];
+
+  localStorage.setItem(
+  "groceryItems",
+  JSON.stringify(
+    [...existing, ...newItems].filter(
+      (item, index, self) =>
+        index ===
+        self.findIndex(
+          (t) =>
+            t.name.toLowerCase().trim() ===
+            item.name.toLowerCase().trim()
+        )
+    )
+  )
+);
+  
+
+  setPopupMessage(
+    "Missing ingredients added to grocery cart!"
+  );
+
+  setShowPopup(true);
+};
   const handleSaveFavorite = () => {
     setIsFavorite((prev) => !prev);
   };
@@ -220,6 +265,18 @@ function RecipeDetails() {
             { normalizedRecipe.detailedIngredients ||
               "No detailed ingredients available."}
           </p>
+ <SubstitutesModal
+  ingredients={
+    (fullRecipe?.ingredients ||
+      fullRecipe?.ingredient_list ||
+      fullRecipe?.ingredientsList ||
+      "")
+      .toString()
+      .split(",")
+      .map(i => i.trim())
+      .filter(Boolean)
+    }
+/>
         </section>
 
         <label style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "10px",marginBottom: "20px" }}>
