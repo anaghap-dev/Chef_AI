@@ -32,33 +32,33 @@ export const normalizeRecipe = (recipe, fullRecipe = null) => {
       null,
 
     carbs:
-      recipe?.["Carbohydrates (g)"] ??
-      fullRecipe?.["Carbohydrates (g)"] ??
+      recipe?.["Carbohydrates g"] ??
+      fullRecipe?.["Carbohydrates g"] ??
       null,
 
     protein:
-      recipe?.["Protein (g)"] ??
-      fullRecipe?.["Protein (g)"] ??
+      recipe?.["Protein g"] ??
+      fullRecipe?.["Protein g"] ??
       null,
 
     fats:
-      recipe?.["Fats (g)"] ??
-      fullRecipe?.["Fats (g)"] ??
+      recipe?.["Fats g"] ??
+      fullRecipe?.["Fats g"] ??
       null,
 
     sugar:
-      recipe?.["Free Sugar (g)"] ??
-      fullRecipe?.["Free Sugar (g)"] ??
+      recipe?.["Free Sugar g"] ??
+      fullRecipe?.["Free Sugar g"] ??
       null,
 
     fibre:
-      recipe?.["Fibre (g)"] ??
-      fullRecipe?.["Fibre (g)"] ??
+      recipe?.["Fibre g"] ??
+      fullRecipe?.["Fibre g"] ??
       null,
 
     sodium:
-      recipe?.["Sodium (mg)"] ??
-      fullRecipe?.["Sodium (mg)"] ??
+      recipe?.["Sodium mg"] ??
+      fullRecipe?.["Sodium mg"] ??
       null,
 
       image:
@@ -67,13 +67,13 @@ export const normalizeRecipe = (recipe, fullRecipe = null) => {
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
   
     calcium:
-      recipe?.["Calcium (mg)"] ??
-      fullRecipe?.["Calcium (mg)"] ??
+      recipe?.["Calcium mg"] ??
+      fullRecipe?.["Calcium mg"] ??
       null,
 
     iron:
-      recipe?.["Iron (mg)"] ??
-      fullRecipe?.["Iron (mg)"] ??
+      recipe?.["Iron mg"] ??
+      fullRecipe?.["Iron mg"] ??
       null,
   };
 };
