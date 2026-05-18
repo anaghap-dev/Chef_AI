@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { normalizeRecipe } from "../utils/normalizeRecipe";
 
 function RecipeCard({recipe,
   onView,
@@ -11,23 +12,23 @@ function RecipeCard({recipe,
   allergy,
   message }) {
     const navigate = useNavigate();
-
+    const normalizedRecipe = normalizeRecipe(recipe);
     
   return (
-    <div style={styles.card}>
+      <div style={styles.card}>
       <div style={styles.imageContainer}>
-        <img src={recipe.image} alt="recipe" style={styles.image} />
+        <img src={normalizedRecipe.image} alt="recipe" style={styles.image} />
       </div>
 
       <div style={styles.content}>
         <div style={styles.row}>
           <div>
             <h4 style={styles.title}>
-              {recipe.recipe_name}
+              {recipe.recipe_name || normalizedRecipe.name}
             </h4>
 
             <p style={styles.info}>
-              {recipe.time} • {recipe.cuisine}
+              {recipe.time || normalizedRecipe.time || "N/A"} •{" "} {recipe.cuisine || normalizedRecipe.cuisine}
             </p>
           </div>
 
@@ -39,7 +40,13 @@ function RecipeCard({recipe,
               } else {
                 navigate("/recipe-details", {
                   state: {
-                    recipe,
+                    recipe: {
+                   ...recipe,
+                    type:
+                    recipe.type ||
+                    (recipe.is_strict ? "strict" : "ai") ||
+                    "fallback"
+                    },
                      recipes,
                   strictRecipes,
                          ingredients,
@@ -66,6 +73,7 @@ const styles = {
     background: "#fff",
     borderRadius: "15px",
     overflow: "hidden",
+    flexShrink: 0,
     boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
   },
 
