@@ -220,7 +220,8 @@ JSON FORMAT:
             "lemon",
             "soy sauce",
             "vinegar",
-            "green chili"
+            "green chili",
+            "chilli"
         }
 
         real_invalid = invalid_items - SAFE_OPTIONAL_ITEMS
