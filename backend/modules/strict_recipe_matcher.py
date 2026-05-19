@@ -132,7 +132,7 @@ Recipe must:
 3. Never use markdown
 4. Never invent ingredients
 5. Use simple preparation if ingredients are limited
-
+6. Include realistic estimated nutrition values for ALL nutrition fields
 JSON FORMAT:
 
 {{
@@ -167,7 +167,8 @@ JSON FORMAT:
         if not response.text:
          raise Exception("Empty response from Gemini")
         generated_text = response.text.strip()
-
+        print("\nRAW GEMINI RESPONSE:")
+        print(generated_text)
         # ---------------------------------------------
         # REMOVE MARKDOWN IF PRESENT
         # ---------------------------------------------
@@ -205,10 +206,14 @@ JSON FORMAT:
          ingredients_text = str(ingredients_field)
 
         generated_ingredients = set(
-            get_ingredient_tokens(ingredients_text)
+            token.rstrip("s")
+            for token in get_ingredient_tokens(ingredients_text)
         )
 
-        allowed_tokens = user_tokens.union(PANTRY_ITEMS)
+        allowed_tokens = set(
+            token.rstrip("s")
+            for token in user_tokens.union(PANTRY_ITEMS)
+        )
 
         # Reject hallucinated ingredients
         invalid_items = generated_ingredients - allowed_tokens
