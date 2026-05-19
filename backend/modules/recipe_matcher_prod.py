@@ -615,8 +615,8 @@ def initialize_model():
 def calculate_scores(user_vector, user_tokens, cuisine_filter=None, category_filter=None):
     """
     Composite score:
-    - TF-IDF cosine similarity = 70%
-    - token overlap = 30%
+    - TF-IDF cosine similarity = 60%
+    - token overlap = 40%
     Optional bonuses for cuisine/category.
     """
 

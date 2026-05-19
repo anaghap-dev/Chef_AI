@@ -5,5 +5,4 @@ numpy
 scikit-learn
 google-genai
 Pillow
-SpeechRecognition
 python-dotenv
